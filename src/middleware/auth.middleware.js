@@ -38,6 +38,7 @@ export const adminVerifyJWT = async(req, res, next) => {
 
 export const employeeVerifyJWT = async(req, res, next) => {
     console.log(req.header('Authorization'))
+    console.log(req.cookies?.accessToken)
     try {
         const token = req.cookies?.accessToken || req.header("Authorization").replace("Bearer ", "")
 
@@ -53,13 +54,19 @@ export const employeeVerifyJWT = async(req, res, next) => {
         const user = await Employee.findById(decodedToken?._id).select("-password -refreshToken")
 
         if (!user) {
-            throw new ApiError(400, "Access token not found !! ")
+            return res.status(400).json({
+                message: "Access Token not found",
+                success: false,
+            })
         }
 
         req.user = user
         next()
 
     } catch (error) {
-        throw new ApiError(401, "Invalid Access Token")
+        return res.status(400).json({
+            message: "Invalid access token",
+            success: false,
+        })
     }
 }
