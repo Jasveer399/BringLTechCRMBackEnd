@@ -4,8 +4,8 @@ import { employeeVerifyJWT } from "../middleware/auth.middleware.js"
 
 const router = Router();
 
-router.post("/createemployee", createEmployee);
-router.post("/loginemployee", loginEmployee)
-router.get("/logoutemployee", employeeVerifyJWT, logoutEmployee)
+router.post("/", createEmployee);
+router.post("/login", loginEmployee)
+router.get("/logout", employeeVerifyJWT, logoutEmployee)
 
 export default router;
