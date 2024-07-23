@@ -9,13 +9,15 @@ app.use(cors());
 
 connectDB();
 
-app.get("/",(req,res)=>{
+app.get("/", (req,res)=>{
   res.send("API is running...");
 })
 
 import adminrouter from "./routes/admin.route.js";
+import employeeRouter from "./routes/employee.route.js";
 
 app.use("/admin", adminrouter);
+app.use("/employee", employeeRouter)
 
 app.listen(3000, () =>
   console.log("Server listening on http://localhost on port 3000")
