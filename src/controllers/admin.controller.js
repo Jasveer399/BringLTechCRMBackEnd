@@ -114,4 +114,31 @@ const adminlogin = async (req, res) => {
   }
 };
 
-export { createAdmin, adminlogin };
+const logoutAdmin = async (req, res) => {
+  await Admin.findByIdAndUpdate(
+    req.admin?._id,
+    {
+      $unset: {
+        refreshToken: 1,
+      },
+    },
+    { new: true }
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json({
+      messaage: "Admin Logged Out Successfully",
+      success: true,
+    });
+}
+
+
+export { createAdmin, adminlogin,logoutAdmin};
