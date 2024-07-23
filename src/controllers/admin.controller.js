@@ -1,5 +1,3 @@
-// import Admin from "../model/admin.model.js";
-
 import { Admin } from "../model/admin.model.js";
 
 const createAdmin = async (req, res) => {
