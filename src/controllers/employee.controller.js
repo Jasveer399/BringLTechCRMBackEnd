@@ -1,5 +1,6 @@
 import { Employee } from "../model/employee.model.js";
 import jwt from "jsonwebtoken";
+import {nanoid} from "nanoid"
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -20,10 +21,11 @@ const generateAccessAndRefreshToken = async (userid) => {
 };
 
 const createEmployee = async (req, res) => {
-  const { name, position, email, employeeId, password } = req.body;
+  const { name, position, email, employeeId } = req.body;
   console.log(req.body)
+  
 
-  if (!name && !position && !employeeId && !password && !email) {
+  if (!name && !position && !employeeId && !email) {
     return res.status(400).json({
       messaage: "all fields are required",
       success: false,
@@ -39,8 +41,16 @@ const createEmployee = async (req, res) => {
     });
   }
 
-  try {
-    console.log("hi")
+
+  try { 
+    const password = nanoid(10);
+    if (!password) {
+      return res.status(500).json({
+        messaage: "Passsword is Not Created During Employee Registeration",
+        success: false,
+      });
+    }
+    console.log(password)
     const createdUser = await Employee.create({
       name,
       position,
@@ -48,7 +58,6 @@ const createEmployee = async (req, res) => {
       employeeId,
       password
     });
-    console.log("hi 2")
 
     if (!createdUser) {
       return res.status(500).json({
@@ -56,7 +65,6 @@ const createEmployee = async (req, res) => {
         success: false,
       });
     }
-    console.log("hi3")
 
 
     return res.status(200).json({
