@@ -22,13 +22,24 @@ const employeeSchema = new Schema(
             unique: true,
             required: true
         },
+
         password: {
             type: String,
             required: true
         },
         refreshToken: {
             type: String,
-        }
+        },
+        isAvailable: {
+            type: Boolean,
+            default: false
+        },
+        availableTo:{
+            type: String,
+        },
+        availableFrom:{
+            type: String,
+        },
     },
     {
         timestamps: true

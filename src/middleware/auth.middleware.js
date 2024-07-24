@@ -48,7 +48,6 @@ export const employeeVerifyJWT = async(req, res, next) => {
                 success: false,
             })
         }
-
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
 
         const user = await Employee.findById(decodedToken?._id).select("-password -refreshToken")
@@ -60,7 +59,7 @@ export const employeeVerifyJWT = async(req, res, next) => {
             })
         }
 
-        req.user = user
+        req.employee = user
         next()
 
     } catch (error) {

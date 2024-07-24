@@ -1,6 +1,6 @@
 import { Employee } from "../model/employee.model.js";
 import jwt from "jsonwebtoken";
-import {nanoid} from "nanoid"
+import { nanoid } from "nanoid";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -22,27 +22,20 @@ const generateAccessAndRefreshToken = async (userid) => {
 
 const createEmployee = async (req, res) => {
   const { name, position, email, employeeId } = req.body;
-  console.log(req.body)
-  
-
   if (!name && !position && !employeeId && !email) {
     return res.status(400).json({
       messaage: "all fields are required",
       success: false,
     });
   }
-
   const userExists = await Employee.findOne({ employeeId });
-
   if (userExists) {
     return res.status(400).json({
       messaage: "Employee id already exists",
       success: false,
     });
   }
-
-
-  try { 
+  try {
     const password = nanoid(10);
     if (!password) {
       return res.status(500).json({
@@ -50,26 +43,24 @@ const createEmployee = async (req, res) => {
         success: false,
       });
     }
-    console.log(password)
+    console.log(password);
     const createdUser = await Employee.create({
       name,
       position,
       email,
       employeeId,
-      password
+      password,
     });
-
     if (!createdUser) {
       return res.status(500).json({
         messaage: "Something went wrong while creating user !!",
         success: false,
       });
     }
-
-
     return res.status(200).json({
       messaage: "Employee created",
       data: createdUser,
+      password: password,
       success: true,
     });
   } catch (error) {
@@ -79,10 +70,8 @@ const createEmployee = async (req, res) => {
     });
   }
 };
-
 const loginEmployee = async (req, res) => {
   const { employeeId, password } = req.body;
-
   if (!employeeId && !password) {
     return res.status(400).json({
       message: "All fields are required",
@@ -92,7 +81,7 @@ const loginEmployee = async (req, res) => {
 
   try {
     const user = await Employee.findOne({ employeeId });
-  
+
     if (!user) {
       return res.status(400).json({
         messaage: "Invalid credentials",
@@ -100,10 +89,10 @@ const loginEmployee = async (req, res) => {
       });
     }
 
-    console.log(user)
-  
+    console.log(user);
+
     const isPasswordCorrect = await user.isPasswordCorrect(password);
-  
+
     if (!isPasswordCorrect) {
       return res.json({
         status: 400,
@@ -112,65 +101,100 @@ const loginEmployee = async (req, res) => {
       });
     }
 
-    console.log(isPasswordCorrect)
-  
+    console.log(isPasswordCorrect);
+
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       user._id
     );
-  
-    const loggedInUser = await Employee.findById(user._id).select(
+
+    const now = new Date();
+    const formattedLoginTimestamp = formatDate(now);
+   
+    const loggedInUser = await Employee.findByIdAndUpdate(user._id,{ 
+      $set:{
+        availableFrom:formattedLoginTimestamp,
+      }
+    }).select(
       "-password -refreshToken"
     );
-  
+
     const options = {
       httpOnly: true,
       secure: false,
     };
-  
+
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
-      .json(
-          {
-            data: loggedInUser,
-            refreshToken: refreshToken,
-            messaage: "Logged In Successfully !!",
-            success: true,
-          },
-        )
+      .json({
+        data: loggedInUser,
+        refreshToken: refreshToken,
+        messaage: "Logged In Successfully !!",
+        success: true,
+      });
   } catch (error) {
     return res.status(400).json({
-        messaage: "Something went wrong while loggin user",
-        success: false
-    })
+      messaage: "Something went wrong while loggin user",
+      success: false,
+    });
   }
 };
+function formatDate(date) {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "pm" : "am";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const formattedTime = `${hours}:${minutes}${ampm}`;
+
+  return `${day}-${month}-${year},${formattedTime}`;
+}
 
 const logoutEmployee = async (req, res) => {
-    await Employee.findByIdAndUpdate(
-      req.user?._id,
-      {
-        $unset: {
-          refreshToken: 1,
-        },
+  await Employee.findByIdAndUpdate(
+    req.employee?._id,
+    {
+      $unset: {
+        refreshToken: 1,
       },
-      { new: true }
-    );
-  
-    const options = {
-      httpOnly: true,
-      secure: true,
-    };
-  
-    return res
-      .status(200)
-      .clearCookie("accessToken", options)
-      .clearCookie("refreshToken", options)
-      .json({
-        messaage: "User Logged Out Successfully",
-        success: true,
+    },
+    { new: true }
+  );
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json({
+      messaage: "User Logged Out Successfully",
+      success: true,
+    });
+};
+
+const getAllEmployee = async(req, res) => {
+  const AllEmployee = await Employee.find({})
+
+  if (!AllEmployee) {
+      return res.status(500).json({
+          messaage: "Error while getting all task",
+          success: false,
       });
   }
 
-export { createEmployee, loginEmployee, logoutEmployee };
+  return res.status(200).json({
+      messaage: "Task fetched !!",
+      data: AllEmployee,
+      success: true,
+      });
+  }
+
+export { createEmployee, loginEmployee, logoutEmployee,getAllEmployee };
