@@ -7,7 +7,10 @@ import cookieParser from "cookie-parser";
 dotenv.config();
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // Your React app's URL
+  credentials: true
+}));
 app.use(cookieParser())
 app.use(express.urlencoded({
   extended: true,
@@ -15,10 +18,6 @@ app.use(express.urlencoded({
 }))
 
 connectDB();
-
-app.get("/", (req,res)=>{
-  res.send("API is running...");
-})
 
 import adminrouter from "./routes/admin.route.js";
 import employeeRouter from "./routes/employee.route.js";
