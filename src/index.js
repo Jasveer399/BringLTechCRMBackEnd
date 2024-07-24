@@ -21,9 +21,11 @@ connectDB();
 
 import adminrouter from "./routes/admin.route.js";
 import employeeRouter from "./routes/employee.route.js";
+import taskRouter from "./routes/task.route.js";
 
 app.use("/admin", adminrouter);
 app.use("/employee", employeeRouter)
+app.use("/task", taskRouter)
 
 app.listen(3000, () =>
   console.log("Server listening on http://localhost on port 3000")
