@@ -1,4 +1,4 @@
-import { createEmployee, loginEmployee, logoutEmployee, toggleisAvailable } from "../controllers/employee.controller.js";
+import { createEmployee, loginEmployee, logoutEmployee } from "../controllers/employee.controller.js";
 import { Router} from "express";
 import { employeeVerifyJWT } from "../middleware/auth.middleware.js"
 
