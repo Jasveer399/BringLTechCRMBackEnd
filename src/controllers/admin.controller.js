@@ -104,6 +104,7 @@ const adminlogin = async (req, res) => {
       .json({
         data: loggedInUser,
         success: true,
+        accessToken:accessToken,
         refreshToken: refreshToken,
         messaage: "Logged In Successfully !!",
       });
