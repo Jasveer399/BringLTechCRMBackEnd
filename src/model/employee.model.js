@@ -22,7 +22,6 @@ const employeeSchema = new Schema(
             unique: true,
             required: true
         },
-
         password: {
             type: String,
             required: true
@@ -30,7 +29,6 @@ const employeeSchema = new Schema(
         refreshToken: {
             type: String,
         },
-
         tasks: [
             {
                 type: Schema.Types.ObjectId,
@@ -39,15 +37,23 @@ const employeeSchema = new Schema(
         ],
         availability: [
             {
-                type: Schema.Types.ObjectId,
-                ref: "Availability"
+                availableTo: String,
+                availableFrom: String,
+                isAvailable: {
+                    type: Boolean,
+                    default: false
+                },
+                owner: {
+                    type: String,
+                    required: true
+                }
             }
         ]
     },
     {
         timestamps: true
     }
-)
+);
 
 employeeSchema.pre("save", async function (next) {
     if(!this.isModified("password")) return next()

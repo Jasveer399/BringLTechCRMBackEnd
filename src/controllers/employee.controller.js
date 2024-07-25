@@ -71,72 +71,135 @@ const createEmployee = async (req, res) => {
     });
   }
 };
+// const loginEmployee = async (req, res) => {
+//   const { employeeId, password } = req.body;
+//   if (!employeeId && !password) {
+//     return res.status(400).json({
+//       message: "All fields are required",
+//       success: false,
+//     });
+//   }
+
+//   try {
+//     const user = await Employee.findOne({ employeeId });
+
+//     if (!user) {
+//       return res.status(400).json({
+//         messaage: "Invalid credentials",
+//         success: false,
+//       });
+//     }
+
+//     console.log(user);
+
+//     const isPasswordCorrect = await user.isPasswordCorrect(password);
+
+//     if (!isPasswordCorrect) {
+//       return res.json({
+//         status: 400,
+//         message: "Wrong Password",
+//         success: false,
+//       });
+//     }
+
+//     console.log(isPasswordCorrect);
+
+//     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
+//       user._id
+//     );
+
+//     const now = new Date();
+//     const formattedLoginTimestamp = formatDate(now);
+
+//     const loggedInUser = await Employee.findByIdAndUpdate(user._id).select(
+//       "-password -refreshToken"
+//     );
+
+//     const options = {
+//       httpOnly: true,
+//       secure: false,
+//     };
+//     return res
+//       .status(200)
+//       .cookie("accessToken", accessToken, options)
+//       .cookie("refreshToken", refreshToken, options)
+//       .json({
+//         data: loggedInUser,
+//         refreshToken: refreshToken,
+//         messaage: "Logged In Successfully !!",
+//         success: true,
+//       });
+//   } catch (error) {
+//     return res.status(400).json({
+//       messaage: "Something went wrong while loggin user",
+//       success: false,
+//     });
+//   }
+// };
 const loginEmployee = async (req, res) => {
   const { employeeId, password } = req.body;
-  if (!employeeId && !password) {
+  if (!employeeId || !password) {
     return res.status(400).json({
       message: "All fields are required",
       success: false,
     });
   }
-
   try {
     const user = await Employee.findOne({ employeeId });
-
     if (!user) {
       return res.status(400).json({
-        messaage: "Invalid credentials",
+        message: "Invalid credentials",
         success: false,
       });
     }
 
-    console.log(user);
-
     const isPasswordCorrect = await user.isPasswordCorrect(password);
-
     if (!isPasswordCorrect) {
-      return res.json({
-        status: 400,
+      return res.status(400).json({
         message: "Wrong Password",
         success: false,
       });
     }
 
-    console.log(isPasswordCorrect);
-
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       user._id
     );
-
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
-   
-    const loggedInUser = await Employee.findByIdAndUpdate(user._id).select(
+
+    // Create new availability entry
+    const newAvailability = {
+      availableFrom: formattedLoginTimestamp,
+      owner: "Employee",
+      isAvailable: true,
+    };
+
+    user.availability.push(newAvailability);
+    await user.save();
+
+    const loggedInUser = await Employee.findById(user._id).select(
       "-password -refreshToken"
     );
-     
-    const availability = await Availability.create({
-      availableFrom:formattedLoginTimestamp,
-      isAvailable:true,
-      owner:user._id,
-    })
+
     const options = {
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
     };
+
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
       .json({
         data: loggedInUser,
-        refreshToken: refreshToken,
-        messaage: "Logged In Successfully !!",
+        accessToken,
+        message: "Logged In Successfully!",
         success: true,
       });
   } catch (error) {
-    return res.status(400).json({
-      messaage: "Something went wrong while loggin user",
+    console.error("Login error:", error);
+    return res.status(500).json({
+      message: "Something went wrong while logging in user",
       success: false,
     });
   }
@@ -181,21 +244,21 @@ const logoutEmployee = async (req, res) => {
     });
 };
 
-const getAllEmployee = async(req, res) => {
-  const AllEmployee = await Employee.find({})
+const getAllEmployee = async (req, res) => {
+  const AllEmployee = await Employee.find({});
 
   if (!AllEmployee) {
-      return res.status(500).json({
-          messaage: "Error while getting all task",
-          success: false,
-      });
+    return res.status(500).json({
+      messaage: "Error while getting all task",
+      success: false,
+    });
   }
 
   return res.status(200).json({
-      messaage: "Task fetched !!",
-      data: AllEmployee,
-      success: true,
-      });
-  }
+    messaage: "Task fetched !!",
+    data: AllEmployee,
+    success: true,
+  });
+};
 
 export { createEmployee, loginEmployee, logoutEmployee, getAllEmployee };
