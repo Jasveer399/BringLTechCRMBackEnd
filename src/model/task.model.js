@@ -28,6 +28,9 @@ const taskSchema = new Schema(
         createdBy: {
             type: String,
             required: true
+        },
+        assignedTo: {
+            type: String
         }
     },
     {

@@ -101,13 +101,11 @@ const updatePassword = async (req, res) => {
 
     console.log(isPasswordCorrect);
     user.password = newPassword;
-    await user.save({validateBeforeSave: false});
-    return res
-      .status(200)
-      .json({
-        messaage: "Password Update Successfully !!",
-        success: true,
-      });
+    await user.save({ validateBeforeSave: false });
+    return res.status(200).json({
+      messaage: "Password Update Successfully !!",
+      success: true,
+    });
   } catch (error) {
     return res.status(400).json({
       messaage: "Something went wrong while Updating Password",
@@ -239,10 +237,32 @@ const getAllEmployee = async (req, res) => {
   });
 };
 
+const getEmployeeData = async (req, res) => {
+  const { _id } = req.body;
+
+  const employee = await Employee.findById({ _id }).select(
+    "-password -refreshToken"
+  );
+
+  if (!employee) {
+    return res.status(400).json({
+      messaage: "Employee not found",
+      success: false,
+    });
+  }
+
+  return res.status(200).json({
+    data: employee,
+    messaage: "Employee fetched !!",
+    success: true,
+  });
+};
+
 export {
   createEmployee,
   loginEmployee,
   logoutEmployee,
   getAllEmployee,
   updatePassword,
+  getEmployeeData,
 };
