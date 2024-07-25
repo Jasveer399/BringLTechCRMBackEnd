@@ -1,6 +1,7 @@
 import { Employee } from "../model/employee.model.js";
 import jwt from "jsonwebtoken";
 import { nanoid } from "nanoid";
+import { Availability } from "../model/availabililty.model.js";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -110,19 +111,19 @@ const loginEmployee = async (req, res) => {
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
    
-    const loggedInUser = await Employee.findByIdAndUpdate(user._id,{ 
-      $set:{
-        availableFrom:formattedLoginTimestamp,
-      }
-    }).select(
+    const loggedInUser = await Employee.findByIdAndUpdate(user._id).select(
       "-password -refreshToken"
     );
-
+     
+    const availability = await Availability.create({
+      availableFrom:formattedLoginTimestamp,
+      isAvailable:true,
+      owner:user._id,
+    })
     const options = {
       httpOnly: true,
       secure: false,
     };
-
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
