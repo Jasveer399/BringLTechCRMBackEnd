@@ -1,5 +1,6 @@
 import { Employee } from "../model/employee.model.js";
 import { nanoid } from "nanoid";
+import { onMailer } from "../utils/mailer.js";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -56,11 +57,15 @@ const createEmployee = async (req, res) => {
         success: false,
       });
     }
+    const mail = await onMailer(email, employeeId, password);
     return res.status(200).json({
       messaage: "Employee created",
       data: createdUser,
       password: password,
       success: true,
+      mail: mail
+        ? "Mail sent successfully"
+        : "Could not send email to employee !!",
     });
   } catch (error) {
     return res.status(500).json({
@@ -101,9 +106,11 @@ const updatePassword = async (req, res) => {
 
     console.log(isPasswordCorrect);
     user.password = newPassword;
+    user.ispasswordupdated = true;
     await user.save({ validateBeforeSave: false });
     return res.status(200).json({
       messaage: "Password Update Successfully !!",
+      data: user.ispasswordupdated,
       success: true,
     });
   } catch (error) {
