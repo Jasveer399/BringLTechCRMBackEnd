@@ -69,6 +69,7 @@ const createEmployee = async (req, res) => {
     });
   }
 };
+
 const updatePassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const id = req.user?._id;
@@ -113,6 +114,7 @@ const updatePassword = async (req, res) => {
     });
   }
 };
+
 const loginEmployee = async (req, res) => {
   const { employeeId, password } = req.body;
   if (!employeeId || !password) {
@@ -240,22 +242,59 @@ const getAllEmployee = async (req, res) => {
 const getEmployeeData = async (req, res) => {
   const { _id } = req.body;
 
-  const employee = await Employee.findById({ _id }).select(
-    "-password -refreshToken"
-  );
-
-  if (!employee) {
-    return res.status(400).json({
-      messaage: "Employee not found",
+  try {
+    const employee = await Employee.findById({ _id }).select(
+      "-password -refreshToken"
+    );
+  
+    if (!employee) {
+      return res.status(400).json({
+        messaage: "Employee not found",
+        success: false,
+      });
+    }
+  
+    return res.status(200).json({
+      data: employee,
+      messaage: "Employee fetched !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(200).json({
+      messaage: "error while getting Employee data !!",
       success: false,
     });
   }
+};
 
-  return res.status(200).json({
-    data: employee,
-    messaage: "Employee fetched !!",
-    success: true,
-  });
+const getSpecificEmployeeTasks = async (req, res) => {
+  const { _id } = req.body;
+  console.log("req.body: ",req.body)
+
+  try {
+    const employee = await Employee.findById({ _id });
+
+    if (!employee) {
+      return res.status(400).json({
+        messaage: "employee not found",
+        success: false,
+      });
+    }
+
+    const tasks = employee.tasks
+
+    return res.status(500).json({
+      data: tasks,
+      messaage: "tasks fetched !!",
+      success: true,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      messaage: "something went wrong while fetching tasks",
+      success: false,
+    });
+  }
 };
 
 export {
@@ -265,4 +304,5 @@ export {
   getAllEmployee,
   updatePassword,
   getEmployeeData,
+  getSpecificEmployeeTasks,
 };
