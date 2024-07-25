@@ -2,7 +2,7 @@ import { Employee } from "../model/employee.model.js";
 import { Task } from "../model/task.model.js";
 
 const createTask = async (req, res) => {
-    const { title, description, link, timeFrom, timeTo } = req.body;
+    const { title, description, link, timeFrom, timeTo, _id } = req.body;
     console.log(req.body)
     
     if (!title && !description && !timeFrom && !timeTo) {
@@ -22,7 +22,7 @@ const createTask = async (req, res) => {
         createdBy: req.role
       });
 
-      console.log(createTask)
+      console.log(createdTask)
   
       if (!createdTask) {
         return res.status(500).json({
@@ -31,11 +31,14 @@ const createTask = async (req, res) => {
         });
       }
 
-      // await Employee.findByIdAndUpdate()
-      // const response = res.json({
-      //   data: createTask
-      // })
-      // console.log(response)
+      await Employee.findByIdAndUpdate(
+        _id, {
+          $push: {
+            tasks: createdTask
+          }
+        },
+        { new: true }
+      )
 
 
   

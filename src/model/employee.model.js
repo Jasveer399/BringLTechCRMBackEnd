@@ -31,8 +31,7 @@ const employeeSchema = new Schema(
         },
         tasks: [
             {
-                type: Schema.Types.ObjectId,
-                ref: "Task"
+                type: Object
             }
         ],
         availability: [
