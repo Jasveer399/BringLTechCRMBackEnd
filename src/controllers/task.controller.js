@@ -1,10 +1,11 @@
+import { Employee } from "../model/employee.model.js";
 import { Task } from "../model/task.model.js";
 
 const createTask = async (req, res) => {
-    const { title, description, link, timeFrom, timeTo, createdBy } = req.body;
+    const { title, description, link, timeFrom, timeTo } = req.body;
     console.log(req.body)
     
-    if (!title && !description && !timeFrom && !timeTo && !createdBy) {
+    if (!title && !description && !timeFrom && !timeTo) {
       return res.status(400).json({
         messaage: "all fields are required",
         success: false,
@@ -18,8 +19,10 @@ const createTask = async (req, res) => {
         link,
         timeFrom,
         timeTo,
-        createdBy
+        createdBy: req.role
       });
+
+      console.log(createTask)
   
       if (!createdTask) {
         return res.status(500).json({
@@ -27,6 +30,14 @@ const createTask = async (req, res) => {
           success: false,
         });
       }
+
+      await Employee.find
+      // const response = res.json({
+      //   data: createTask
+      // })
+      // console.log(response)
+
+
   
       return res.status(200).json({
         messaage: "Task created",

@@ -117,7 +117,7 @@ const adminlogin = async (req, res) => {
 
 const logoutAdmin = async (req, res) => {
   await Admin.findByIdAndUpdate(
-    req.admin?._id,
+    req.user?._id,
     {
       $unset: {
         refreshToken: 1,

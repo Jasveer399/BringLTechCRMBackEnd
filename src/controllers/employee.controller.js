@@ -157,7 +157,7 @@ function formatDate(date) {
 
 const logoutEmployee = async (req, res) => {
   await Employee.findByIdAndUpdate(
-    req.employee?._id,
+    req.user?._id,
     {
       $unset: {
         refreshToken: 1,
