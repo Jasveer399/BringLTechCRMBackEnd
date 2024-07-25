@@ -48,7 +48,11 @@ const employeeSchema = new Schema(
                     required: true
                 }
             }
-        ]
+        ],
+        ispasswordupdated:{
+            type: Boolean,
+            default: false
+        },
     },
     {
         timestamps: true
