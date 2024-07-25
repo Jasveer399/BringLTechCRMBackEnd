@@ -31,7 +31,7 @@ const createEmployee = async (req, res) => {
   const userExists = await Employee.findOne({ employeeId });
   if (userExists) {
     return res.status(400).json({
-      messaage: "Employee id already exists",
+      message: "Employee id already exists",
       success: false,
     });
   }
@@ -150,6 +150,7 @@ const loginEmployee = async (req, res) => {
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       user._id
     );
+
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
 
@@ -160,6 +161,7 @@ const loginEmployee = async (req, res) => {
     };
 
     const aev = user.availability.push(newAvailability);
+    user.refreshToken = refreshToken
     await user.save();
 
     const loggedInUser = await Employee.findById(user._id).select(

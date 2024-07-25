@@ -71,7 +71,7 @@ const adminlogin = async (req, res) => {
 
     if (!user) {
       return res.status(400).json({
-        messaage: "Invalid credentials",
+        message: "Invalid credentials",
         success: false,
       });
     }
@@ -111,7 +111,7 @@ const adminlogin = async (req, res) => {
   } catch (error) {
     return res
       .status(500)
-      .json({ success: false, message: "Server Internal Error" });
+      .json({ success: false, message: "Server Internal Error", error });
   }
 };
 
