@@ -1,7 +1,5 @@
 import { Employee } from "../model/employee.model.js";
-import jwt from "jsonwebtoken";
 import { nanoid } from "nanoid";
-import { Availability } from "../model/availabililty.model.js";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -71,71 +69,50 @@ const createEmployee = async (req, res) => {
     });
   }
 };
-// const loginEmployee = async (req, res) => {
-//   const { employeeId, password } = req.body;
-//   if (!employeeId && !password) {
-//     return res.status(400).json({
-//       message: "All fields are required",
-//       success: false,
-//     });
-//   }
+const updatePassword = async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const id = req.user?._id;
+  if (!oldPassword && !newPassword) {
+    return res.status(400).json({
+      message: "All fields are required",
+      success: false,
+    });
+  }
+  try {
+    const user = await Employee.findById(id);
+    if (!user) {
+      return res.status(400).json({
+        messaage: "Invalid credentials",
+        success: false,
+      });
+    }
 
-//   try {
-//     const user = await Employee.findOne({ employeeId });
+    console.log(user);
 
-//     if (!user) {
-//       return res.status(400).json({
-//         messaage: "Invalid credentials",
-//         success: false,
-//       });
-//     }
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
-//     console.log(user);
+    if (!isPasswordCorrect) {
+      return res.json({
+        status: 400,
+        message: "Wrong Password",
+        success: false,
+      });
+    }
 
-//     const isPasswordCorrect = await user.isPasswordCorrect(password);
-
-//     if (!isPasswordCorrect) {
-//       return res.json({
-//         status: 400,
-//         message: "Wrong Password",
-//         success: false,
-//       });
-//     }
-
-//     console.log(isPasswordCorrect);
-
-//     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
-//       user._id
-//     );
-
-//     const now = new Date();
-//     const formattedLoginTimestamp = formatDate(now);
-
-//     const loggedInUser = await Employee.findByIdAndUpdate(user._id).select(
-//       "-password -refreshToken"
-//     );
-
-//     const options = {
-//       httpOnly: true,
-//       secure: false,
-//     };
-//     return res
-//       .status(200)
-//       .cookie("accessToken", accessToken, options)
-//       .cookie("refreshToken", refreshToken, options)
-//       .json({
-//         data: loggedInUser,
-//         refreshToken: refreshToken,
-//         messaage: "Logged In Successfully !!",
-//         success: true,
-//       });
-//   } catch (error) {
-//     return res.status(400).json({
-//       messaage: "Something went wrong while loggin user",
-//       success: false,
-//     });
-//   }
-// };
+    console.log(isPasswordCorrect);
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+    return res.status(200).json({
+      messaage: "Password Update Successfully !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      messaage: "Something went wrong while Updating Password",
+      success: false,
+    });
+  }
+};
 const loginEmployee = async (req, res) => {
   const { employeeId, password } = req.body;
   if (!employeeId || !password) {
@@ -167,14 +144,13 @@ const loginEmployee = async (req, res) => {
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
 
-    // Create new availability entry
     const newAvailability = {
       availableFrom: formattedLoginTimestamp,
       owner: "Employee",
       isAvailable: true,
     };
 
-    user.availability.push(newAvailability);
+    const aev = user.availability.push(newAvailability);
     await user.save();
 
     const loggedInUser = await Employee.findById(user._id).select(
@@ -261,10 +237,12 @@ const getAllEmployee = async (req, res) => {
   });
 };
 
-const getEmployeeData = async(req, res) => {
-  const { _id } = req.body
+const getEmployeeData = async (req, res) => {
+  const { _id } = req.body;
 
-  const employee = await Employee.findById({ _id }).select("-password -refreshToken")
+  const employee = await Employee.findById({ _id }).select(
+    "-password -refreshToken"
+  );
 
   if (!employee) {
     return res.status(400).json({
@@ -278,6 +256,13 @@ const getEmployeeData = async(req, res) => {
     messaage: "Employee fetched !!",
     success: true,
   });
-}
+};
 
-export { createEmployee, loginEmployee, logoutEmployee, getAllEmployee, getEmployeeData };
+export {
+  createEmployee,
+  loginEmployee,
+  logoutEmployee,
+  getAllEmployee,
+  updatePassword,
+  getEmployeeData,
+};
