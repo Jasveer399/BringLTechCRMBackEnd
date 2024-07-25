@@ -30,6 +30,19 @@ const employeeSchema = new Schema(
         refreshToken: {
             type: String,
         },
+
+        tasks: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Task"
+            }
+        ],
+        availability: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: "Availability"
+            }
+        ]
     },
     {
         timestamps: true

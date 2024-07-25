@@ -198,4 +198,4 @@ const getAllEmployee = async(req, res) => {
       });
   }
 
-export { createEmployee, loginEmployee, logoutEmployee,getAllEmployee };
+export { createEmployee, loginEmployee, logoutEmployee, getAllEmployee };
