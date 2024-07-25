@@ -261,4 +261,23 @@ const getAllEmployee = async (req, res) => {
   });
 };
 
-export { createEmployee, loginEmployee, logoutEmployee, getAllEmployee };
+const getEmployeeData = async(req, res) => {
+  const { _id } = req.body
+
+  const employee = await Employee.findById({ _id }).select("-password -refreshToken")
+
+  if (!employee) {
+    return res.status(400).json({
+      messaage: "Employee not found",
+      success: false,
+    });
+  }
+
+  return res.status(200).json({
+    data: employee,
+    messaage: "Employee fetched !!",
+    success: true,
+  });
+}
+
+export { createEmployee, loginEmployee, logoutEmployee, getAllEmployee, getEmployeeData };
