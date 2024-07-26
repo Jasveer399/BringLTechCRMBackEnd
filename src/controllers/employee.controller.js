@@ -192,7 +192,7 @@ const loginEmployee = async (req, res) => {
     });
   }
 };
-const logoutEpmloyee = async (req, res) => {
+const logoutEmployee = async (req, res) => {
   const { id } = req.body;
 try {
     const user = await Employee.findById(req.user?._id);
@@ -334,7 +334,7 @@ const getSpecificEmployeeTasks = async (req, res) => {
 export {
   createEmployee,
   loginEmployee,
-  logoutEpmloyee,
+  logoutEmployee,
   getAllEmployee,
   updatePassword,
   getEmployeeData,
