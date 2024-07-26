@@ -26,6 +26,6 @@ router.post("/login", loginEmployee);
 router.post("/updatepassword", verifyJWT(["employee"]), updatePassword),
   router.get("/getAllEmployee", getAllEmployee);
 router.post("/getEmployeeData", verifyJWT(["admin"]), getEmployeeData);
-router.get("/login", verifyJWT(["employee"]), logoutEmployee);
+router.get("/logout", verifyJWT(["employee"]), logoutEmployee);
 
 export default router;
