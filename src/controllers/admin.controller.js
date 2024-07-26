@@ -136,7 +136,7 @@ const logoutAdmin = async (req, res) => {
     .clearCookie("accessToken", options)
     .clearCookie("refreshToken", options)
     .json({
-      messaage: "Admin Logged Out Successfully",
+      message: "Admin Logged Out Successfully",
       success: true,
     });
 }

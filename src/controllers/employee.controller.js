@@ -1,6 +1,7 @@
 import { Employee } from "../model/employee.model.js";
 import { nanoid } from "nanoid";
 import { onMailer } from "../utils/mailer.js";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -104,7 +105,7 @@ const updatePassword = async (req, res) => {
       });
     }
 
-    console.log(isPasswordCorrect);
+    // console.log(isPasswordCorrect);
     user.password = newPassword;
     user.ispasswordupdated = true;
     await user.save({ validateBeforeSave: false });
@@ -120,6 +121,7 @@ const updatePassword = async (req, res) => {
     });
   }
 };
+
 const loginEmployee = async (req, res) => {
   const { employeeId, password } = req.body;
   if (!employeeId || !password) {
@@ -187,6 +189,56 @@ const loginEmployee = async (req, res) => {
     });
   }
 };
+const logoutEpmloyee = async (req, res) => {
+  const { id } = req.body;
+try {
+    const user = await Employee.findById(req.user?._id);
+    const now = new Date();
+    const formattedLoginTimestamp = formatDate(now);
+
+  console.log(id)
+   const agg = await Employee.aggregate([
+      {
+        $match: {
+          _id: user._id,
+        },
+      },
+      {
+        $unwind: "$availability",
+      },
+      {
+        $match: {
+          "availability._id":new mongoose.Types.ObjectId(id),
+        },
+      },
+      {
+        $set: {
+          "availability.availableTo": formattedLoginTimestamp,
+        },
+      },
+    ]);  
+    const options = {
+      httpOnly: true,
+      secure: false,
+    };
+    return res
+      .status(200)
+      .clearCookie("accessToken", options)
+      .clearCookie("refreshToken", options)
+      .json({
+        messaage: "Epmloyee Logged Out Successfully",
+        success: true,
+      });
+} catch (error) {
+  return res
+  .status(500)
+  .json({
+    messaage: "Error While Epmloyee Logged Out",
+    success: false,
+    error: error
+  });
+}
+};
 function formatDate(date) {
   const day = date.getDate().toString().padStart(2, "0");
   const month = date.getMonth() + 1;
@@ -200,32 +252,6 @@ function formatDate(date) {
 
   return `${day}-${month}-${year},${formattedTime}`;
 }
-
-const logoutEmployee = async (req, res) => {
-  await Employee.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $unset: {
-        refreshToken: 1,
-      },
-    },
-    { new: true }
-  );
-
-  const options = {
-    httpOnly: true,
-    secure: true,
-  };
-
-  return res
-    .status(200)
-    .clearCookie("accessToken", options)
-    .clearCookie("refreshToken", options)
-    .json({
-      messaage: "User Logged Out Successfully",
-      success: true,
-    });
-};
 
 const getAllEmployee = async (req, res) => {
   const AllEmployee = await Employee.find({});
@@ -268,7 +294,7 @@ const getEmployeeData = async (req, res) => {
 export {
   createEmployee,
   loginEmployee,
-  logoutEmployee,
+  logoutEpmloyee,
   getAllEmployee,
   updatePassword,
   getEmployeeData,
