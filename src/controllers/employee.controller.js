@@ -171,7 +171,7 @@ const loginEmployee = async (req, res) => {
     };
 
     const aev = user.availability.push(newAvailability);
-    user.refreshToken = refreshToken
+    user.refreshToken = refreshToken;
     await user.save();
 
     const loggedInUser = await Employee.findById(user._id).select(
@@ -203,14 +203,14 @@ const loginEmployee = async (req, res) => {
 };
 const logoutEmployee = async (req, res) => {
   const { id } = req.query;
-  console.log("req.query: ", req.query)
-try {
+  console.log("req.query: ", req.query);
+  try {
     const user = await Employee.findById(req.user?._id);
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
 
-  console.log(id)
-   const agg = await Employee.aggregate([
+    console.log(id);
+    const agg = await Employee.aggregate([
       {
         $match: {
           _id: user._id,
@@ -221,7 +221,7 @@ try {
       },
       {
         $match: {
-          "availability._id":new mongoose.Types.ObjectId(id),
+          "availability._id": new mongoose.Types.ObjectId(id),
         },
       },
       {
@@ -229,8 +229,8 @@ try {
           "availability.availableTo": formattedLoginTimestamp,
         },
       },
-    ]);  
-    console.log(agg)
+    ]);
+    console.log(agg);
     const options = {
       httpOnly: true,
       secure: false,
@@ -243,15 +243,13 @@ try {
         messaage: "Epmloyee Logged Out Successfully",
         success: true,
       });
-} catch (error) {
-  return res
-  .status(500)
-  .json({
-    messaage: "Error While Epmloyee Logged Out",
-    success: false,
-    error: error
-  });
-}
+  } catch (error) {
+    return res.status(500).json({
+      messaage: "Error While Epmloyee Logged Out",
+      success: false,
+      error: error,
+    });
+  }
 };
 function formatDate(date) {
   const day = date.getDate().toString().padStart(2, "0");
@@ -285,20 +283,27 @@ const getAllEmployee = async (req, res) => {
 };
 
 const getEmployeeData = async (req, res) => {
-  const { _id } = req.body;
+  let id;
+  console.log(req.body);
+  if (req.body._id) {
+    id = new mongoose.Types.ObjectId(req.body._id);
+  } else if (req.user?._id) {
+    id = req.user?._id;
+  }
+  console.log(id);
 
   try {
-    const employee = await Employee.findById({ _id }).select(
+    const employee = await Employee.findById(id).select(
       "-password -refreshToken"
     );
-  
+
     if (!employee) {
       return res.status(400).json({
         messaage: "Employee not found",
         success: false,
       });
     }
-  
+
     return res.status(200).json({
       data: employee,
       messaage: "Employee fetched !!",
@@ -314,10 +319,19 @@ const getEmployeeData = async (req, res) => {
 
 const getSpecificEmployeeTasks = async (req, res) => {
   const { _id } = req.body;
-  console.log("req.body: ",req.body)
+  console.log("req.body: ", req.body);
+
+  // const id = _id || req.user?._id
+  let id;
+  if (req.body._id) {
+    id = req.body._id;
+  } else if (req.user?._id) {
+    id = req.user?._id;
+  }
+  console.log(id);
 
   try {
-    const employee = await Employee.findById({ _id });
+    const employee = await Employee.findById({ id });
 
     if (!employee) {
       return res.status(400).json({
@@ -326,17 +340,42 @@ const getSpecificEmployeeTasks = async (req, res) => {
       });
     }
 
-    const tasks = employee.tasks
+    const tasks = employee.tasks;
 
     return res.status(500).json({
       data: tasks,
       messaage: "tasks fetched !!",
       success: true,
     });
-
   } catch (error) {
     return res.status(500).json({
       messaage: "something went wrong while fetching tasks",
+      success: false,
+    });
+  }
+};
+
+const getCurrentEmployee = async (req, res) => {
+  try {
+    const employee = await Employee.findById(req.user?._id).select(
+      "-password -refreshToken"
+    );
+
+    if (!employee) {
+      return res.status(400).json({
+        messaage: "Employee Not Found !!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      data: employee,
+      messaage: "Employee fetched !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      messaage: "Error while fetching employee !!",
       success: false,
     });
   }
@@ -350,4 +389,5 @@ export {
   updatePassword,
   getEmployeeData,
   getSpecificEmployeeTasks,
+  getCurrentEmployee,
 };

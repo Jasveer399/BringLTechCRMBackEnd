@@ -1,6 +1,7 @@
 import {
   createEmployee,
   getAllEmployee,
+  getCurrentEmployee,
   getEmployeeData,
   getSpecificEmployeeTasks,
   loginEmployee,
@@ -16,7 +17,7 @@ router.post("/", createEmployee);
 router.post("/login", loginEmployee);
 router.post("/updatepassword", verifyJWT(["employee"]), updatePassword),
   router.get("/getAllEmployee", getAllEmployee);
-router.post("/getEmployeeData", verifyJWT(["admin"]), getEmployeeData);
+router.post("/getEmployeeData", verifyJWT(['admin', 'employee']), getEmployeeData);
 router.post(
   "/getSpecificEmployeeTasks",
   verifyJWT(["admin"]),
@@ -27,5 +28,6 @@ router.post("/updatepassword", verifyJWT(["employee"]), updatePassword),
   router.get("/getAllEmployee", getAllEmployee);
 router.post("/getEmployeeData", verifyJWT(["admin"]), getEmployeeData);
 router.get("/logout", verifyJWT(["employee"]), logoutEmployee);
+router.get("/getCurrentEmployee", verifyJWT(['employee']), getCurrentEmployee)
 
 export default router;

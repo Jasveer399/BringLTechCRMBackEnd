@@ -3,7 +3,10 @@ import { Employee } from "../model/employee.model.js";
 import { Admin } from "../model/admin.model.js";
 
 export const verifyJWT = (roles) => async (req, res, next) => {
-    console.log(req.header('Authorization'))
+    console.log("headers token: ", req.header('Authorization'))
+    console.log("cookies token", req.cookies?.accessToken)
+    console.log(roles)
+    console.log(roles.includes('employee'))
     try {
         const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
 
@@ -18,8 +21,13 @@ export const verifyJWT = (roles) => async (req, res, next) => {
 
         let user;
         if (roles.includes('admin')) {
+            console.log("4444444444444444444444444444")
             user = await Admin.findById(decodedToken?._id).select("-password -refreshToken")
+            if (!user && roles.includes('employee')) {
+                user = await Employee.findById(decodedToken?._id).select("-password -refreshToken")
+            }
         } else if (roles.includes('employee')) {
+            console.log("//////////////////////////////////////////////////////////////////////")
             user = await Employee.findById(decodedToken?._id).select("-password -refreshToken")
         }
 
