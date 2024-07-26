@@ -193,7 +193,8 @@ const loginEmployee = async (req, res) => {
   }
 };
 const logoutEmployee = async (req, res) => {
-  const { id } = req.body;
+  const { id } = req.query;
+  console.log("req.query: ", req.query)
 try {
     const user = await Employee.findById(req.user?._id);
     const now = new Date();
@@ -220,6 +221,7 @@ try {
         },
       },
     ]);  
+    console.log(agg)
     const options = {
       httpOnly: true,
       secure: false,
