@@ -1,6 +1,5 @@
 import { createEmployee, getAllEmployee, getEmployeeData, getSpecificEmployeeTasks, loginEmployee, logoutEmployee, updatePassword } from "../controllers/employee.controller.js";
-import { Router} from "express";
-import { Router } from "express";
+import { Router} from "express"
 import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router = Router();
