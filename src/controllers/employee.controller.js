@@ -1,6 +1,6 @@
 import { Employee } from "../model/employee.model.js";
 import { nanoid } from "nanoid";
-import { onMailer } from "../utils/mailer.js";
+import { notifyAdmin, onMailer } from "../utils/mailer.js";
 import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userid) => {
@@ -23,12 +23,15 @@ const generateAccessAndRefreshToken = async (userid) => {
 
 const createEmployee = async (req, res) => {
   const { name, position, email, employeeId } = req.body;
-  if (!name && !position && !employeeId && !email) {
+  const adminEmail = "jassijas182002@gmail.com"; // Admin's email address
+
+  if (!name || !position || !employeeId || !email) {
     return res.status(400).json({
-      messaage: "all fields are required",
+      message: "All fields are required",
       success: false,
     });
   }
+
   const userExists = await Employee.findOne({ employeeId });
   if (userExists) {
     return res.status(400).json({
@@ -36,11 +39,12 @@ const createEmployee = async (req, res) => {
       success: false,
     });
   }
+
   try {
     const password = nanoid(10);
     if (!password) {
       return res.status(500).json({
-        messaage: "Passsword is Not Created During Employee Registeration",
+        message: "Password is not created during employee registration",
         success: false,
       });
     }
@@ -54,23 +58,28 @@ const createEmployee = async (req, res) => {
     });
     if (!createdUser) {
       return res.status(500).json({
-        messaage: "Something went wrong while creating user !!",
+        message: "Something went wrong while creating user!",
         success: false,
       });
     }
-    const mail = await onMailer(email, employeeId, password);
+    const employeeMailSent = await onMailer(email, employeeId, password);
+    const adminNotified = await notifyAdmin(adminEmail, createdUser);
     return res.status(200).json({
-      messaage: "Employee created",
+      message: "Employee created",
       data: createdUser,
       password: password,
       success: true,
-      mail: mail
-        ? "Mail sent successfully"
-        : "Could not send email to employee !!",
+      employeeMail: employeeMailSent
+        ? "Mail sent successfully to employee"
+        : "Could not send email to employee!",
+      adminNotification: adminNotified
+        ? "Admin notified successfully"
+        : "Could not notify admin!",
     });
   } catch (error) {
     return res.status(500).json({
-      messaage: "Error while creating employee",
+      message: "Error while creating employee",
+      error: error.message,
       success: false,
     });
   }
