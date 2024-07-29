@@ -1,9 +1,10 @@
 import { Employee } from "../model/employee.model.js";
 import { Task } from "../model/task.model.js";
+import mongoose from "mongoose";
 
 const createTask = async (req, res) => {
-    const { title, description, link, timeFrom, timeTo, _id } = req.body;
-    console.log(req.body)
+    const { title, description, link, timeFrom, timeTo, employeeId } = req.body;
+    // console.log(req.body)
     
     if (!title && !description && !timeFrom && !timeTo) {
       return res.status(400).json({
@@ -19,7 +20,8 @@ const createTask = async (req, res) => {
         link,
         timeFrom,
         timeTo,
-        createdBy: req.role
+        createdBy: req.role,
+        assignedTo: employeeId
       });
 
       console.log(createdTask)
@@ -31,14 +33,14 @@ const createTask = async (req, res) => {
         });
       }
 
-      await Employee.findByIdAndUpdate(
-        _id, {
-          $push: {
-            tasks: createdTask
-          }
-        },
-        { new: true }
-      )
+      // await Employee.findByIdAndUpdate(
+      //   _id, {
+      //     $push: {
+      //       tasks: createdTask
+      //     }
+      //   },
+      //   { new: true }
+      // )
 
 
   
@@ -72,8 +74,84 @@ const createTask = async (req, res) => {
       });
   }
 
+  const getSpecificEmployeeTask = async(req, res) => {
+    let id;
+    console.log("req.body: ", req.body);
+    if (req.body._id) {
+      id = new mongoose.Types.ObjectId(req.body._id);
+    } else if (req.user?._id) {
+      id = req.user?._id;
+    }
+
+    const user = await Employee.findById({ _id: id })
+
+    if (!user) {
+      return res.status(400).json({
+        messaage: "user not found",
+        success: false,
+      });
+    }
+
+    console.log(user)
+
+    const tasks = await Task.aggregate([
+      {
+        $match: {
+          assignedTo: user._id
+        }
+      }
+    ])
+
+    if (!tasks) {
+      return res.status(500).json({
+        messaage: "tasks not found",
+        success: false,
+      });
+    }
+
+    console.log(tasks)
+
+    return res.status(200).json({
+      data: tasks,
+      messaage: "Tasks fetched",
+      success: true,
+    });
+  }
+
+  const taskVerifyHandler = async(req, res) => {
+    const { _id } = req.body
+    console.log("verify handler req.body: " , req.body)
+
+    const verifiedTask = await Task.findByIdAndUpdate(
+      _id, 
+      {
+        $set: {
+          completion: true
+        }
+      },
+      { new: true }
+    )
+
+    console.log(verifiedTask)
+
+    if (!verifiedTask) {
+      return res.status(500).json({
+        messaage: "Error while verifying task",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      data: verifiedTask,
+      messaage: "Task verified !!",
+      success: true,
+    });
+  }
+
   export {
     createTask,
-    getAllTasks
+    getAllTasks,
+    getSpecificEmployeeTask,
+    taskVerifyHandler
   }
   

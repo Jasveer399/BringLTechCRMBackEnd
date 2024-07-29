@@ -284,13 +284,13 @@ const getAllEmployee = async (req, res) => {
 
 const getEmployeeData = async (req, res) => {
   let id;
-  console.log(req.body);
+  // console.log(req.body);
   if (req.body._id) {
     id = new mongoose.Types.ObjectId(req.body._id);
   } else if (req.user?._id) {
     id = req.user?._id;
   }
-  console.log(id);
+  // console.log(id);
 
   try {
     const employee = await Employee.findById(id).select(

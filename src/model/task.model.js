@@ -30,7 +30,8 @@ const taskSchema = new Schema(
             required: true
         },
         assignedTo: {
-            type: String
+            type: Schema.Types.ObjectId,
+            ref: "Employee"
         }
     },
     {

@@ -29,11 +29,6 @@ const employeeSchema = new Schema(
         refreshToken: {
             type: String,
         },
-        tasks: [
-            {
-                type: Object
-            }
-        ],
         availability: [
             {
                 availableTo: String,
