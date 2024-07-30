@@ -97,13 +97,15 @@ const getSpecificEmployeeTask = async (req, res) => {
 };
 
 const taskVerifyHandler = async (req, res) => {
-  const { _id } = req.body;
+  const { _id,link } = req.body;
+  console.log(req.body);
 
   const verifiedTask = await Task.findByIdAndUpdate(
     _id,
     {
       $set: {
         completion: true,
+        taskcompleteLink:link,
       },
     },
     { new: true }

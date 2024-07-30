@@ -13,6 +13,9 @@ const taskSchema = new Schema(
     link: {
       type: String,
     },
+    taskcompleteLink:{
+        type: String,
+    },
     timeFrom: {
       type: String,
       required: true,
