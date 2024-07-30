@@ -149,9 +149,15 @@ const taskDelete = async (req, res) => {
   });
 };
 const modifyTaskHandler = async (req, res) => {
-  const { _id, newModifydes, newModifyTimeto, newModifyTimeFrom,newModifyLink} = req.body;
+  const {
+    _id,
+    newModifydes,
+    newModifyTimeto,
+    newModifyTimeFrom,
+    newModifyLink,
+  } = req.body;
   console.log(req.body);
-try {
+  try {
     if (!newModifydes && !newModifyTimeto && !newModifyTimeFrom) {
       return res.status(400).json({
         messaage: "All field are required",
@@ -164,8 +170,8 @@ try {
         messaage: "Task Not Found",
         success: false,
       });
-    }  
-    task.newModifyLink=newModifyLink;
+    }
+    task.newModifyLink = newModifyLink;
     task.newModifyDes = newModifydes;
     task.newModifyTimeto = newModifyTimeto;
     task.newModifyTimeFrom = newModifyTimeFrom;
@@ -182,47 +188,6 @@ try {
       messaage: "Task Modified Successfully",
       success: true,
     });
-} catch (error) {
-  return res.status(500).json({
-    messaage: "Internal Server Error",
-    success: false,
-    error,
-  });
-}
-};
-const updateTaskHandler = async (req, res) => {
-  try {
-      const { _id, newUpdatedDes, newUpdatedTimeto, newUpdatedTimeFrom,newUpdateLink} = req.body;
-      if (!newUpdatedDes && !newUpdatedTimeto && !newUpdatedTimeFrom) {
-        return res.status(400).json({
-          messaage: "All field are required",
-          success: false,
-        });
-      }
-      const task = await Task.findById(_id);
-      if (!task) {
-        return res.status(400).json({
-          messaage: "Task Not Found",
-          success: false,
-        });
-      }
-      task.newUpdateLink = newUpdateLink;
-      task.newUpdatedDes = newUpdatedDes;
-      task.newUpdatedTimeto = newUpdatedTimeto;
-      task.newUpdatedTimeFrom = newUpdatedTimeFrom;
-      task.isUpdated = true;
-      const updatedTask = await task.save();
-      if (!updatedTask) {
-        return res.status(500).json({
-          messaage: "Error while Upadting task",
-          success: false,
-        });
-      }
-      return res.status(200).json({
-        data: updatedTask,
-        messaage: "Task Updated Successfully",
-        success: true,
-      });
   } catch (error) {
     return res.status(500).json({
       messaage: "Internal Server Error",
@@ -230,9 +195,81 @@ const updateTaskHandler = async (req, res) => {
       error,
     });
   }
-  };
-  
+};
+const updateTaskHandler = async (req, res) => {
+  try {
+    const {
+      _id,
+      newUpdatedDes,
+      newUpdatedTimeto,
+      newUpdatedTimeFrom,
+      newUpdateLink,
+    } = req.body;
+    console.log(req.body);
+    if (!newUpdatedDes && !newUpdatedTimeto && !newUpdatedTimeFrom) {
+      return res.status(400).json({
+        messaage: "All field are required",
+        success: false,
+      });
+    }
 
+    const task = await Task.findById(_id);
+    if (!task) {
+      return res.status(400).json({
+        messaage: "Task Not Found",
+        success: false,
+      });
+    }
+    task.newUpdateLink = newUpdateLink;
+    task.newUpdatedDes = newUpdatedDes;
+    task.newUpdatedTimeto = newUpdatedTimeto;
+    task.newUpdatedTimeFrom = newUpdatedTimeFrom;
+    task.isUpdated = true;
+    const updatedTask = await task.save();
+    if (!updatedTask) {
+      return res.status(500).json({
+        messaage: "Error while Upadting task",
+        success: false,
+      });
+    }
+    return res.status(200).json({
+      data: updatedTask,
+      messaage: "Task Updated Successfully",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      messaage: "Internal Server Error",
+      success: false,
+      error,
+    });
+  }
+};
+
+const taskAdminVerificationHandler = async (req, res) => {
+  const { _id } = req.body;
+
+  const verifiedTask = await Task.findByIdAndUpdate(
+    _id,
+    {
+      $set: {
+        isVerify: true,
+      },
+    },
+    { new: true }
+  );
+  if (!verifiedTask) {
+    return res.status(500).json({
+      messaage: "Error while verifying task by Admin",
+      success: false,
+    });
+  }
+  return res.status(200).json({
+    data: verifiedTask,
+    messaage: "Task verified !!",
+    success: true,
+  });
+}
 export {
   createTask,
   getAllTasks,
@@ -241,4 +278,5 @@ export {
   taskDelete,
   modifyTaskHandler,
   updateTaskHandler,
+  taskAdminVerificationHandler,
 };
