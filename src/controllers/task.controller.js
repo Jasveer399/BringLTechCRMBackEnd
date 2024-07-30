@@ -148,10 +148,40 @@ const createTask = async (req, res) => {
     });
   }
 
+  const taskDelete= async (req, res) => {
+    const { _id } = req.body
+    console.log("delete handler req.body: " , req.body)
+
+    if (!_id) {
+      return res.status(400).json({
+        messaage: "Task id is required",
+        success: false,
+      });
+    }
+    if (!req.user) {
+      return res.status(400).json({
+        messaage: "UnAuthorized Requiest",
+        success: false,
+      });
+    }
+    const task = await Task.findByIdAndDelete({_id})
+    if (!task) {
+        return res.status(500).json({
+          messaage: "Task is Not Fund",
+          success: false,
+        });
+    }
+    return res.status(200).json({
+      messaage: "Task deleted successfully",
+      success: true,
+    });
+  }
+
   export {
     createTask,
     getAllTasks,
     getSpecificEmployeeTask,
-    taskVerifyHandler
+    taskVerifyHandler,
+    taskDelete,
   }
   
