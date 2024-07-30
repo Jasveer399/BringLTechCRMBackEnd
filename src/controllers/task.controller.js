@@ -150,7 +150,6 @@ const createTask = async (req, res) => {
 
   const taskDelete= async (req, res) => {
     const { _id } = req.body
-    console.log("delete handler req.body: " , req.body)
 
     if (!_id) {
       return res.status(400).json({
