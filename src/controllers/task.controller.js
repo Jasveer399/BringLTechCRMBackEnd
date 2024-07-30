@@ -40,7 +40,6 @@ const createTask = async (req, res) => {
     });
   }
 };
-
 const getAllTasks = async (req, res) => {
   const allTasks = await Task.find({});
 
@@ -57,7 +56,6 @@ const getAllTasks = async (req, res) => {
     success: true,
   });
 };
-
 const getSpecificEmployeeTask = async (req, res) => {
   let id;
   if (req.body._id) {
@@ -95,7 +93,6 @@ const getSpecificEmployeeTask = async (req, res) => {
     success: true,
   });
 };
-
 const taskVerifyHandler = async (req, res) => {
   const { _id,link } = req.body;
   console.log(req.body);
@@ -122,7 +119,6 @@ const taskVerifyHandler = async (req, res) => {
     success: true,
   });
 };
-
 const taskDelete = async (req, res) => {
   const { _id } = req.body;
 
@@ -247,7 +243,6 @@ const updateTaskHandler = async (req, res) => {
     });
   }
 };
-
 const taskAdminVerificationHandler = async (req, res) => {
   const { _id } = req.body;
 

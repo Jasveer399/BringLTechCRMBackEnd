@@ -14,7 +14,6 @@ const generateAccessAndRefreshToken = async (userid) => {
     });
   }
 };
-
 const createAdmin = async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -53,7 +52,6 @@ const createAdmin = async (req, res) => {
     });
   }
 };
-
 const adminlogin = async (req, res) => {
   const { email, password } = req.body;
 
@@ -111,7 +109,6 @@ const adminlogin = async (req, res) => {
       .json({ success: false, message: "Server Internal Error", error });
   }
 };
-
 const logoutAdmin = async (req, res) => {
   await Admin.findByIdAndUpdate(
     req.user?._id,
@@ -137,6 +134,4 @@ const logoutAdmin = async (req, res) => {
       success: true,
     });
 }
-
-
 export { createAdmin, adminlogin,logoutAdmin};

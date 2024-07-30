@@ -17,7 +17,6 @@ const generateAccessAndRefreshToken = async (userid) => {
     });
   }
 };
-
 const createEmployee = async (req, res) => {
   const { name, position, email, employeeId } = req.body;
   const adminEmail = "jassijas182002@gmail.com"; // Admin's email address
@@ -80,7 +79,6 @@ const createEmployee = async (req, res) => {
     });
   }
 };
-
 const updatePassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const id = req.user?._id;
@@ -124,7 +122,6 @@ const updatePassword = async (req, res) => {
     });
   }
 };
-
 const loginEmployee = async (req, res) => {
   const { employeeId, password } = req.body;
   if (!employeeId || !password) {
@@ -252,7 +249,6 @@ function formatDate(date) {
 
   return `${day}-${month}-${year},${formattedTime}`;
 }
-
 const getAllEmployee = async (req, res) => {
   const AllEmployee = await Employee.find({});
 
@@ -269,7 +265,6 @@ const getAllEmployee = async (req, res) => {
     success: true,
   });
 };
-
 const getEmployeeData = async (req, res) => {
   let id;
   if (req.body._id) {
@@ -301,7 +296,6 @@ const getEmployeeData = async (req, res) => {
     });
   }
 };
-
 const getSpecificEmployeeTasks = async (req, res) => {
   const { _id } = req.body;
   let id;
@@ -335,7 +329,6 @@ const getSpecificEmployeeTasks = async (req, res) => {
     });
   }
 };
-
 const getCurrentEmployee = async (req, res) => {
   try {
     const employee = await Employee.findById(req.user?._id).select(
