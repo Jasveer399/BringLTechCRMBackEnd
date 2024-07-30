@@ -6,10 +6,7 @@ import mongoose from "mongoose";
 const generateAccessAndRefreshToken = async (userid) => {
   try {
     const user = await Employee.findById(userid);
-    console.log(user);
-
     const accessToken = await user.generateAccessToken();
-    console.log(accessToken);
     const refreshToken = await user.generateRefreshToken();
 
     return { accessToken, refreshToken };
@@ -48,7 +45,6 @@ const createEmployee = async (req, res) => {
         success: false,
       });
     }
-    console.log(password);
     const createdUser = await Employee.create({
       name,
       position,
@@ -102,9 +98,6 @@ const updatePassword = async (req, res) => {
         success: false,
       });
     }
-
-    console.log(user);
-
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
     if (!isPasswordCorrect) {
@@ -194,7 +187,6 @@ const loginEmployee = async (req, res) => {
         success: true,
       });
   } catch (error) {
-    console.error("Login error:", error);
     return res.status(500).json({
       message: "Something went wrong while logging in user",
       success: false,
@@ -207,8 +199,6 @@ const logoutEmployee = async (req, res) => {
     const user = await Employee.findById(req.user?._id);
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
-
-    console.log(id);
     const agg = await Employee.aggregate([
       {
         $match: {
@@ -229,7 +219,6 @@ const logoutEmployee = async (req, res) => {
         },
       },
     ]);
-    console.log(agg);
     const options = {
       httpOnly: true,
       secure: false,
@@ -321,7 +310,6 @@ const getSpecificEmployeeTasks = async (req, res) => {
   } else if (req.user?._id) {
     id = req.user?._id;
   }
-  console.log(id);
 
   try {
     const employee = await Employee.findById({ id });

@@ -22,8 +22,6 @@ const createTask = async (req, res) => {
       assignedTo: employeeId,
     });
 
-    console.log(createdTask);
-
     if (!createdTask) {
       return res.status(500).json({
         messaage: "Something went wrong while creating task !!",
@@ -76,9 +74,6 @@ const getSpecificEmployeeTask = async (req, res) => {
       success: false,
     });
   }
-
-  console.log(user);
-
   const tasks = await Task.aggregate([
     {
       $match: {
@@ -93,8 +88,6 @@ const getSpecificEmployeeTask = async (req, res) => {
       success: false,
     });
   }
-
-  console.log(tasks);
 
   return res.status(200).json({
     data: tasks,
@@ -115,16 +108,12 @@ const taskVerifyHandler = async (req, res) => {
     },
     { new: true }
   );
-
-  console.log(verifiedTask);
-
   if (!verifiedTask) {
     return res.status(500).json({
       messaage: "Error while verifying task",
       success: false,
     });
   }
-
   return res.status(200).json({
     data: verifiedTask,
     messaage: "Task verified !!",

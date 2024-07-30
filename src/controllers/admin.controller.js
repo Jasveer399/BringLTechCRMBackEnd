@@ -3,10 +3,7 @@ import { Admin } from "../model/admin.model.js";
 const generateAccessAndRefreshToken = async (userid) => {
   try {
     const user = await Admin.findById(userid);
-    console.log(user);
-
     const accessToken = await user.generateAccessToken();
-    console.log(accessToken);
     const refreshToken = await user.generateRefreshToken();
 
     return { accessToken, refreshToken };
