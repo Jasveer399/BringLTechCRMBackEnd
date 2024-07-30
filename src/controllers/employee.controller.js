@@ -203,7 +203,6 @@ const loginEmployee = async (req, res) => {
 };
 const logoutEmployee = async (req, res) => {
   const { id } = req.query;
-  console.log("req.query: ", req.query);
   try {
     const user = await Employee.findById(req.user?._id);
     const now = new Date();
@@ -284,14 +283,11 @@ const getAllEmployee = async (req, res) => {
 
 const getEmployeeData = async (req, res) => {
   let id;
-  // console.log(req.body);
   if (req.body._id) {
     id = new mongoose.Types.ObjectId(req.body._id);
   } else if (req.user?._id) {
     id = req.user?._id;
   }
-  // console.log(id);
-
   try {
     const employee = await Employee.findById(id).select(
       "-password -refreshToken"
@@ -319,9 +315,6 @@ const getEmployeeData = async (req, res) => {
 
 const getSpecificEmployeeTasks = async (req, res) => {
   const { _id } = req.body;
-  console.log("req.body: ", req.body);
-
-  // const id = _id || req.user?._id
   let id;
   if (req.body._id) {
     id = req.body._id;
