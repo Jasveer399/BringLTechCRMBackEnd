@@ -32,11 +32,42 @@ const taskSchema = new Schema(
         assignedTo: {
             type: Schema.Types.ObjectId,
             ref: "Employee"
+        },
+        isModify:{
+            type: Boolean,
+            default: false
+        },
+        newModifyDes:{
+            type: String,
+        },
+        newModifyTimeto:{
+            type: String,
+        },
+        newModifyTimeFrom:{
+            type: String,
+        },
+        newModifyLink:{
+            type: String,
+        },
+        isUpdated:{
+            type: Boolean,
+            default: false
+        },
+        newUpdatedDes:{
+            type: String,
+        },
+        newUpdatedTimeto:{
+            type: String,
+        },
+        newUpdatedTimeFrom:{
+            type: String,
+        },
+        newUpdateLink:{
+            type: String,
         }
     },
     {
         timestamps: true
     }
 )
-
 export const Task = mongoose.model("Task", taskSchema)
