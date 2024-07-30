@@ -15,11 +15,10 @@ export const onMailer = async (email, epmId, password) => {
   const mailOptions = {
     from: process.env.NODE_MAILER_EMAIL, // jassijas182002@gmail.com
     to: email, // Updated recipient email
-    subject: "New Employee Login Credentials",
+    subject: "Employee Login Credentials",
     text: `A new employee has been created with the following login credentials:
     Employee Id: ${epmId}
-    Employee Password: ${password}
-    Employee Email: ${email}`,
+    Employee Password: ${password}`,
   };
   console.log("mailOptions", mailOptions);
   try {
