@@ -250,20 +250,27 @@ function formatDate(date) {
   return `${day}-${month}-${year},${formattedTime}`;
 }
 const getAllEmployee = async (req, res) => {
-  const AllEmployee = await Employee.find({});
-
-  if (!AllEmployee) {
-    return res.status(500).json({
-      messaage: "Error while getting all task",
-      success: false,
+try {
+    const AllEmployee = await Employee.find({});
+    if (!AllEmployee) {
+      return res.status(500).json({
+        messaage: "Error while getting all task",
+        success: false,
+      });
+    }
+  
+    return res.status(200).json({
+      messaage: "All Employees fetched !!",
+      data: AllEmployee,
+      count:AllEmployee.length,
+      success: true,
     });
-  }
-
-  return res.status(200).json({
-    messaage: "Task fetched !!",
-    data: AllEmployee,
-    success: true,
+} catch (error) {
+  return res.status(500).json({
+    message: "Something went wrong while fetching all employees",
+    success: false,
   });
+}
 };
 const getEmployeeData = async (req, res) => {
   let id;

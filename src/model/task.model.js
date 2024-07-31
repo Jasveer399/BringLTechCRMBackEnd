@@ -72,6 +72,9 @@ const taskSchema = new Schema(
     newUpdateLink: {
       type: String,
     },
+    date:{
+      type: String,
+    }
   },
   {
     timestamps: true,

@@ -134,4 +134,21 @@ const logoutAdmin = async (req, res) => {
       success: true,
     });
 }
-export { createAdmin, adminlogin,logoutAdmin};
+const getallAdmin = async (req, res) =>{
+   try {
+       const admins = await Admin.find({});
+       const count = admins.length;
+       return res.status(200).json({
+         data: admins,
+         count: count,
+         success: true,
+       });
+   } catch (error) {
+     return res.status(500).json({
+       messaage: "Internal Server Error",
+       success: false,
+       error,
+     });
+   }
+}
+export { createAdmin, adminlogin,logoutAdmin,getallAdmin};

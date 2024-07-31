@@ -3,8 +3,8 @@ import { Task } from "../model/task.model.js";
 import mongoose from "mongoose";
 
 const createTask = async (req, res) => {
-  const { title, description, link, timeFrom, timeTo, employeeId } = req.body;
-  if (!title && !description && !timeFrom && !timeTo) {
+  const { title, description, link, timeFrom, timeTo, employeeId,date} = req.body;
+  if (!title && !description && !timeFrom && !timeTo && !date) {
     return res.status(400).json({
       messaage: "all fields are required",
       success: false,
@@ -18,6 +18,7 @@ const createTask = async (req, res) => {
       link,
       timeFrom,
       timeTo,
+      date,
       createdBy: req.role,
       assignedTo: employeeId,
     });
@@ -41,20 +42,26 @@ const createTask = async (req, res) => {
   }
 };
 const getAllTasks = async (req, res) => {
-  const allTasks = await Task.find({});
-
-  if (!allTasks) {
-    return res.status(500).json({
+try {
+    const allTasks = await Task.find({});
+    if (!allTasks) {
+      return res.status(500).json({
+        messaage: "Error while getting all task",
+        success: false,
+      });
+    }
+    return res.status(200).json({
+      messaage: "Task fetched !!",
+      data: allTasks,
+      count: allTasks.length,
+      success: true,
+    });
+} catch (error) {
+  return res.status(500).json({
       messaage: "Error while getting all task",
       success: false,
     });
-  }
-
-  return res.status(200).json({
-    messaage: "Task fetched !!",
-    data: allTasks,
-    success: true,
-  });
+}
 };
 const getSpecificEmployeeTask = async (req, res) => {
   let id;
