@@ -2,6 +2,7 @@ import {
   createTask,
   getAllTasks,
   getSpecificEmployeeTask,
+  getTodayTasks,
   modifyTaskHandler,
   taskAdminVerificationHandler,
   taskDelete,
@@ -29,4 +30,5 @@ router.patch(
   verifyJWT(["admin"]),
   taskAdminVerificationHandler
 );
+router.post("/gettodaytask", verifyJWT(["admin"]), getTodayTasks);
 export default router;

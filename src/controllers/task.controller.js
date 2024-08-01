@@ -42,26 +42,77 @@ const createTask = async (req, res) => {
   }
 };
 const getAllTasks = async (req, res) => {
-try {
-    const allTasks = await Task.find({});
+  try {
+    const allTasks = await Task.aggregate([
+      {
+        $lookup: {
+          from: 'employees', // Assuming your employee collection is named 'employees'
+          localField: 'assignedTo',
+          foreignField: '_id',
+          as: 'assignedEmployee'
+        }
+      },
+      {
+        $unwind: {
+          path: '$assignedEmployee',
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $project: {
+          title: 1,
+          description: 1,
+          link: 1,
+          timeFrom: 1,
+          timeTo: 1,
+          completion: 1,
+          isVerify: 1,
+          createdBy: 1,
+          isModify: 1,
+          isUpdated: 1,
+          date: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          newModifyDate: 1,
+          newModifyDes: 1,
+          newModifyTimeFrom: 1,
+          newModifyTimeto: 1,
+          newUpdateDate: 1,
+          newUpdateLink: 1,
+          newUpdatedDes: 1,
+          newUpdatedTimeFrom: 1,
+          newUpdatedTimeto: 1,
+          assignedTo: {
+            _id: '$assignedEmployee._id',
+            name: '$assignedEmployee.name',
+            email: '$assignedEmployee.email'
+            // Add any other employee fields you want to include
+          }
+        }
+      }
+    ]);
+
     if (!allTasks) {
       return res.status(500).json({
-        messaage: "Error while getting all task",
+        message: "Error while getting all tasks",
         success: false,
       });
     }
+
     return res.status(200).json({
-      messaage: "Task fetched !!",
+      message: "Tasks fetched successfully!",
       data: allTasks,
       count: allTasks.length,
       success: true,
     });
-} catch (error) {
-  return res.status(500).json({
-      messaage: "Error while getting all task",
+  } catch (error) {
+    console.error("Error in getAllTasks:", error);
+    return res.status(500).json({
+      message: "Error while getting all tasks",
+      error: error.message,
       success: false,
     });
-}
+  }
 };
 const getSpecificEmployeeTask = async (req, res) => {
   let id;
@@ -280,6 +331,22 @@ const taskAdminVerificationHandler = async (req, res) => {
     success: true,
   });
 }
+const getTodayTasks = async (req, res) => {
+  try {
+    const today = dayjs().startOf('day');
+    const tasks = await Task.find({
+      date: {
+        $gte: today.toDate(),
+        $lt: today.add(1, 'day').toDate()
+      },
+      completion: false
+    }).populate('assignedTo', 'name');
+
+    res.status(200).json(tasks);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching tasks', error: error.message });
+  }
+};
 export {
   createTask,
   getAllTasks,
@@ -289,4 +356,5 @@ export {
   modifyTaskHandler,
   updateTaskHandler,
   taskAdminVerificationHandler,
+  getTodayTasks,
 };
