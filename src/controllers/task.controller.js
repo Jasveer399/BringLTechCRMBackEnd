@@ -101,8 +101,9 @@ const getSpecificEmployeeTask = async (req, res) => {
   });
 };
 const taskVerifyHandler = async (req, res) => {
-  const { _id,link } = req.body;
+  const { _id, link, timeExceedChecker } = req.body;
   console.log(req.body);
+  
 
   const verifiedTask = await Task.findByIdAndUpdate(
     _id,
@@ -110,6 +111,7 @@ const taskVerifyHandler = async (req, res) => {
       $set: {
         completion: true,
         taskcompleteLink:link,
+        timeExceeded: timeExceedChecker
       },
     },
     { new: true }
@@ -160,10 +162,11 @@ const modifyTaskHandler = async (req, res) => {
     newModifyTimeto,
     newModifyTimeFrom,
     newModifyLink,
+    newModifyDate
   } = req.body;
   console.log(req.body);
   try {
-    if (!newModifydes && !newModifyTimeto && !newModifyTimeFrom) {
+    if (!newModifydes && !newModifyTimeto && !newModifyTimeFrom && !newModifyDate) {
       return res.status(400).json({
         messaage: "All field are required",
         success: false,
@@ -180,16 +183,17 @@ const modifyTaskHandler = async (req, res) => {
     task.newModifyDes = newModifydes;
     task.newModifyTimeto = newModifyTimeto;
     task.newModifyTimeFrom = newModifyTimeFrom;
+    task.newModifyDate = newModifyDate;
     task.isModify = true;
-    const updatedTask = await task.save();
-    if (!updatedTask) {
+    const modifiedTask = await task.save();
+    if (!modifiedTask) {
       return res.status(500).json({
         messaage: "Error while Modifying task",
         success: false,
       });
     }
     return res.status(200).json({
-      data: updatedTask,
+      data: modifiedTask,
       messaage: "Task Modified Successfully",
       success: true,
     });
@@ -209,9 +213,10 @@ const updateTaskHandler = async (req, res) => {
       newUpdatedTimeto,
       newUpdatedTimeFrom,
       newUpdateLink,
+      newUpdateDate
     } = req.body;
     console.log(req.body);
-    if (!newUpdatedDes && !newUpdatedTimeto && !newUpdatedTimeFrom) {
+    if (!newUpdatedDes && !newUpdatedTimeto && !newUpdatedTimeFrom && !newUpdateDate) {
       return res.status(400).json({
         messaage: "All field are required",
         success: false,
@@ -229,6 +234,7 @@ const updateTaskHandler = async (req, res) => {
     task.newUpdatedDes = newUpdatedDes;
     task.newUpdatedTimeto = newUpdatedTimeto;
     task.newUpdatedTimeFrom = newUpdatedTimeFrom;
+    task.newUpdateDate = newUpdateDate;
     task.isUpdated = true;
     const updatedTask = await task.save();
     if (!updatedTask) {

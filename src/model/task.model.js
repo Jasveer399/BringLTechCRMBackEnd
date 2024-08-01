@@ -74,6 +74,16 @@ const taskSchema = new Schema(
     },
     date:{
       type: String,
+    },
+    newModifyDate:{
+      type: String,
+    },
+    newUpdateDate:{
+      type: String,
+    },
+    timeExceeded:{
+      type: Boolean,
+      default: false
     }
   },
   {
