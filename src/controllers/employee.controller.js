@@ -138,7 +138,6 @@ const loginEmployee = async (req, res) => {
         success: false,
       });
     }
-
     const isPasswordCorrect = await user.isPasswordCorrect(password);
     if (!isPasswordCorrect) {
       return res.status(400).json({
@@ -146,33 +145,42 @@ const loginEmployee = async (req, res) => {
         success: false,
       });
     }
-
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       user._id
     );
-
+    
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
-
-    const newAvailability = {
-      availableFrom: formattedLoginTimestamp,
-      owner: "Employee",
-      isAvailable: true,
-    };
-
-    const aev = user.availability.push(newAvailability);
+    const today = now;
+    
+    const hasAvailabilityToday = user.availability.some(entry => {
+      const entryDate = parseCustomDate(entry.availableFrom);
+      return entryDate.getDate() === today.getDate() &&
+             entryDate.getMonth() === today.getMonth() &&
+             entryDate.getFullYear() === today.getFullYear();
+    });
+    
+    if (!hasAvailabilityToday) {
+      const newAvailability = {
+        availableFrom: formattedLoginTimestamp,
+        owner: "Employee",
+        isAvailable: true,
+      };
+      user.availability.push(newAvailability);
+    }
+    
     user.refreshToken = refreshToken;
     await user.save();
-
+    
     const loggedInUser = await Employee.findById(user._id).select(
       "-password -refreshToken"
     );
-
+    
     const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     };
-
+    
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
@@ -184,12 +192,30 @@ const loginEmployee = async (req, res) => {
         success: true,
       });
   } catch (error) {
+    console.error('Error in loginEmployee:', error);
     return res.status(500).json({
       message: "Something went wrong while logging in user",
       success: false,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
+function parseCustomDate(dateString) {
+  const [datePart, timePart] = dateString.split(',');
+  const [day, month, year] = datePart.split('-');
+  const [time, ampm] = timePart.split(/(?=[ap]m)/i);
+  const [hours, minutes] = time.split(':');
+  
+  let parsedHours = parseInt(hours);
+  if (ampm.toLowerCase() === 'pm' && parsedHours !== 12) {
+    parsedHours += 12;
+  } else if (ampm.toLowerCase() === 'am' && parsedHours === 12) {
+    parsedHours = 0;
+  }
+
+  return new Date(year, month - 1, day, parsedHours, parseInt(minutes));
+}
 const logoutEmployee = async (req, res) => {
   const { id } = req.query;
   try {
@@ -327,6 +353,7 @@ const getAllEmployee = async (req, res) => {
       const { password, refreshToken, ...sanitizedEmployee } = employee;
       return sanitizedEmployee;
     });
+
 
     return res.status(200).json({
       message: "All Employees fetched with login counts!",

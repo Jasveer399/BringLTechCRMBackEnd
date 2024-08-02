@@ -43,9 +43,14 @@ const taskSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Employee",
     },
+///////////////////////////////////////////////////////////////////////////
     isModify: {
       type: Boolean,
       default: false,
+    },
+    timeExceeded:{
+      type: Boolean,
+      default: false
     },
     newModifyDes: {
       type: String,
@@ -59,6 +64,17 @@ const taskSchema = new Schema(
     newModifyLink: {
       type: String,
     },
+    modifytimeExceeded:{
+      type: Boolean,
+      default: false
+    },
+    modifycompletiontime:{
+      type: String,
+    },
+    modifytasklink:{
+      type: String,
+    },
+///////////////////////////////////////////////////////////////    
     isUpdated: {
       type: Boolean,
       default: false,
@@ -84,9 +100,15 @@ const taskSchema = new Schema(
     newUpdateDate:{
       type: String,
     },
-    timeExceeded:{
+    updatedtimeExceeded:{
       type: Boolean,
       default: false
+    },
+    updatedcompletiontime:{
+      type: String,
+    },
+    updatedtasklink:{
+      type: String,
     },
     tasktype:{
       type: String,

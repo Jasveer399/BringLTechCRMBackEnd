@@ -3,7 +3,8 @@ import { Task } from "../model/task.model.js";
 import mongoose from "mongoose";
 
 const createTask = async (req, res) => {
-  const { title, description, link, timeFrom, timeTo, employeeId,date} = req.body;
+  const { title, description, link, timeFrom, timeTo, employeeId, date } =
+    req.body;
   if (!title && !description && !timeFrom && !timeTo && !date) {
     return res.status(400).json({
       messaage: "all fields are required",
@@ -21,7 +22,7 @@ const createTask = async (req, res) => {
       date,
       createdBy: req.role,
       assignedTo: employeeId,
-      tasktype:"new",
+      tasktype: "new",
     });
 
     if (!createdTask) {
@@ -47,17 +48,17 @@ const getAllTasks = async (req, res) => {
     const allTasks = await Task.aggregate([
       {
         $lookup: {
-          from: 'employees',
-          localField: 'assignedTo',
-          foreignField: '_id',
-          as: 'assignedEmployee'
-        }
+          from: "employees",
+          localField: "assignedTo",
+          foreignField: "_id",
+          as: "assignedEmployee",
+        },
       },
       {
         $unwind: {
-          path: '$assignedEmployee',
-          preserveNullAndEmptyArrays: true
-        }
+          path: "$assignedEmployee",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $project: {
@@ -84,16 +85,17 @@ const getAllTasks = async (req, res) => {
           newUpdatedTimeFrom: 1,
           newUpdatedTimeto: 1,
           tasktype: 1,
-          completiontime:1,
+          completiontime: 1,
           taskcompleteLink: 1,
+          modifycompletiontime:1,
+          updatedcompletiontime:1,
           assignedTo: {
-            _id: '$assignedEmployee._id',
-            name: '$assignedEmployee.name',
-            email: '$assignedEmployee.email'
-            // Add any other employee fields you want to include
-          }
-        }
-      }
+            _id: "$assignedEmployee._id",
+            name: "$assignedEmployee.name",
+            email: "$assignedEmployee.email",
+          },
+        },
+      },
     ]);
 
     if (!allTasks) {
@@ -158,13 +160,13 @@ const getSpecificEmployeeTask = async (req, res) => {
 const taskVerifyHandler = async (req, res) => {
   const { _id, link, timeExceedChecker } = req.body;
   const now = new Date();
- const completiontime = formatDate(now);
+  const completiontime = formatDate(now);
   const verifiedTask = await Task.findByIdAndUpdate(
     _id,
     {
       $set: {
         completion: true,
-        taskcompleteLink:link,
+        taskcompleteLink: link,
         timeExceeded: timeExceedChecker,
         completiontime,
       },
@@ -230,11 +232,16 @@ const modifyTaskHandler = async (req, res) => {
     newModifyTimeto,
     newModifyTimeFrom,
     newModifyLink,
-    newModifyDate
+    newModifyDate,
   } = req.body;
   console.log(req.body);
   try {
-    if (!newModifydes && !newModifyTimeto && !newModifyTimeFrom && !newModifyDate) {
+    if (
+      !newModifydes &&
+      !newModifyTimeto &&
+      !newModifyTimeFrom &&
+      !newModifyDate
+    ) {
       return res.status(400).json({
         messaage: "All field are required",
         success: false,
@@ -247,15 +254,17 @@ const modifyTaskHandler = async (req, res) => {
         success: false,
       });
     }
+    const now = new Date();
+    const completiontime = formatDate(now);
     task.newModifyLink = newModifyLink;
     task.newModifyDes = newModifydes;
     task.newModifyTimeto = newModifyTimeto;
     task.newModifyTimeFrom = newModifyTimeFrom;
     task.newModifyDate = newModifyDate;
     task.isModify = true;
-    task.tasktype ="modifyed";
-    task.completiontime="";
-    task.completion=false;
+    task.tasktype = "modifyed";
+    task.modifycompletiontime=completiontime,
+    task.completion = false;
     const modifiedTask = await task.save();
     if (!modifiedTask) {
       return res.status(500).json({
@@ -284,10 +293,15 @@ const updateTaskHandler = async (req, res) => {
       newUpdatedTimeto,
       newUpdatedTimeFrom,
       newUpdateLink,
-      newUpdateDate
+      newUpdateDate,
     } = req.body;
     console.log(req.body);
-    if (!newUpdatedDes && !newUpdatedTimeto && !newUpdatedTimeFrom && !newUpdateDate) {
+    if (
+      !newUpdatedDes &&
+      !newUpdatedTimeto &&
+      !newUpdatedTimeFrom &&
+      !newUpdateDate
+    ) {
       return res.status(400).json({
         messaage: "All field are required",
         success: false,
@@ -301,15 +315,17 @@ const updateTaskHandler = async (req, res) => {
         success: false,
       });
     }
+    const now = new Date();
+    const completiontime = formatDate(now);
     task.newUpdateLink = newUpdateLink;
     task.newUpdatedDes = newUpdatedDes;
     task.newUpdatedTimeto = newUpdatedTimeto;
     task.newUpdatedTimeFrom = newUpdatedTimeFrom;
     task.newUpdateDate = newUpdateDate;
     task.isUpdated = true;
-    task.tasktype ="updated";
-    task.completiontime="";
-    task.completion=false;
+    task.tasktype = "updated";
+    task.updatedcompletiontime = completiontime;
+    task.completion = false;
     const updatedTask = await task.save();
     if (!updatedTask) {
       return res.status(500).json({
@@ -353,21 +369,23 @@ const taskAdminVerificationHandler = async (req, res) => {
     messaage: "Task verified !!",
     success: true,
   });
-}
+};
 const getTodayTasks = async (req, res) => {
   try {
-    const today = dayjs().startOf('day');
+    const today = dayjs().startOf("day");
     const tasks = await Task.find({
       date: {
         $gte: today.toDate(),
-        $lt: today.add(1, 'day').toDate()
+        $lt: today.add(1, "day").toDate(),
       },
-      completion: false
-    }).populate('assignedTo', 'name');
+      completion: false,
+    }).populate("assignedTo", "name");
 
     res.status(200).json(tasks);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching tasks', error: error.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching tasks", error: error.message });
   }
 };
 export {
