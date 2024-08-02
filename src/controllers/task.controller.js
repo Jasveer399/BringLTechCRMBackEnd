@@ -90,7 +90,6 @@ const getAllTasks = async (req, res) => {
             _id: '$assignedEmployee._id',
             name: '$assignedEmployee.name',
             email: '$assignedEmployee.email'
-            // Add any other employee fields you want to include
           }
         }
       }
