@@ -16,7 +16,7 @@ const router = Router();
 router.post("/", createEmployee);
 router.post("/login", loginEmployee);
 router.post("/updatepassword", verifyJWT(["employee"]), updatePassword),
-  router.get("/getAllEmployee", getAllEmployee);
+  router.post("/getAllEmployee", getAllEmployee);
 router.post(
   "/getEmployeeData",
   verifyJWT(["admin", "employee"]),

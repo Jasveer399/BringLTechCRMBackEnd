@@ -250,28 +250,121 @@ function formatDate(date) {
   return `${day}-${month}-${year},${formattedTime}`;
 }
 const getAllEmployee = async (req, res) => {
-try {
-    const AllEmployee = await Employee.find({});
-    if (!AllEmployee) {
-      return res.status(500).json({
-        messaage: "Error while getting all task",
+  const { year, month } = req.body; // Assuming year and month are provided as query parameters
+  
+  try {
+    const pipeline = [
+      {
+        $unwind: {
+          path: "$availability",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $addFields: {
+          parsedDate: {
+            $dateFromParts: {
+              year: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availability.availableFrom", ","] }, 0] }, "-"] }, 2] } },
+              month: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availability.availableFrom", ","] }, 0] }, "-"] }, 1] } },
+              day: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availability.availableFrom", ","] }, 0] }, "-"] }, 0] } }
+            }
+          }
+        }
+      },
+      {
+        $match: {
+          $expr: {
+            $or: [
+              { $eq: ["$availability", undefined] },
+              {
+                $and: [
+                  { $eq: [{ $year: "$parsedDate" }, parseInt(year)] },
+                  { $eq: [{ $month: "$parsedDate" }, parseInt(month)] }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id",
+          employee: { $first: "$$ROOT" },
+          loginCount: { $sum: { $cond: [{ $ifNull: ["$availability", false] }, 1, 0] } }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          employee: {
+            $mergeObjects: [
+              {
+                $arrayToObject: {
+                  $filter: {
+                    input: { $objectToArray: "$employee" },
+                    cond: { $ne: ["$$this.k", "availability"] }
+                  }
+                }
+              },
+              { loginCount: "$loginCount" }
+            ]
+          }
+        }
+      }
+    ];
+
+    const allEmployees = await Employee.aggregate(pipeline);
+
+    if (!allEmployees || allEmployees.length === 0) {
+      return res.status(404).json({
+        message: "No employees found",
         success: false,
       });
     }
-  
+
+    // Remove sensitive information
+    const sanitizedEmployees = allEmployees.map(({ employee }) => {
+      const { password, refreshToken, ...sanitizedEmployee } = employee;
+      return sanitizedEmployee;
+    });
+
     return res.status(200).json({
-      messaage: "All Employees fetched !!",
-      data: AllEmployee,
-      count:AllEmployee.length,
+      message: "All Employees fetched with login counts!",
+      data: sanitizedEmployees,
+      count: sanitizedEmployees.length,
       success: true,
     });
-} catch (error) {
-  return res.status(500).json({
-    message: "Something went wrong while fetching all employees",
-    success: false,
-  });
-}
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Something went wrong while fetching all employees",
+      success: false,
+    });
+  }
 };
+// const getAllEmployee = async (req, res) => {
+// try {
+//     const AllEmployee = await Employee.find({});
+//     if (!AllEmployee) {
+//       return res.status(500).json({
+//         messaage: "Error while getting all task",
+//         success: false,
+//       });
+//     }
+  
+//     return res.status(200).json({
+//       messaage: "All Employees fetched !!",
+//       data: AllEmployee,
+//       count:AllEmployee.length,
+//       success: true,
+//     });
+// } catch (error) {
+//   return res.status(500).json({
+//     message: "Something went wrong while fetching all employees",
+//     success: false,
+//   });
+// }
+// };
 const getEmployeeData = async (req, res) => {
   let id;
   if (req.body._id) {

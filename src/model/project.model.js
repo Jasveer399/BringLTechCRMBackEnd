@@ -20,11 +20,9 @@ const projectSchema = new Schema(
         endDate: {
             type: String,
         },
-        team : [
-            { 
-                type: String
-            }
-        ],
+        team : {
+            type: Array
+        },
         status: {
             type: String,
             enum: ['Not Started', 'In Progress', 'Completed', 'On Hold'],
