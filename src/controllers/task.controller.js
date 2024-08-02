@@ -21,6 +21,7 @@ const createTask = async (req, res) => {
       date,
       createdBy: req.role,
       assignedTo: employeeId,
+      tasktype:"new",
     });
 
     if (!createdTask) {
@@ -46,7 +47,7 @@ const getAllTasks = async (req, res) => {
     const allTasks = await Task.aggregate([
       {
         $lookup: {
-          from: 'employees', // Assuming your employee collection is named 'employees'
+          from: 'employees',
           localField: 'assignedTo',
           foreignField: '_id',
           as: 'assignedEmployee'
@@ -82,6 +83,9 @@ const getAllTasks = async (req, res) => {
           newUpdatedDes: 1,
           newUpdatedTimeFrom: 1,
           newUpdatedTimeto: 1,
+          tasktype: 1,
+          completiontime:1,
+          taskcompleteLink: 1,
           assignedTo: {
             _id: '$assignedEmployee._id',
             name: '$assignedEmployee.name',
@@ -153,16 +157,16 @@ const getSpecificEmployeeTask = async (req, res) => {
 };
 const taskVerifyHandler = async (req, res) => {
   const { _id, link, timeExceedChecker } = req.body;
-  console.log(req.body);
-  
-
+  const now = new Date();
+ const completiontime = formatDate(now);
   const verifiedTask = await Task.findByIdAndUpdate(
     _id,
     {
       $set: {
         completion: true,
         taskcompleteLink:link,
-        timeExceeded: timeExceedChecker
+        timeExceeded: timeExceedChecker,
+        completiontime,
       },
     },
     { new: true }
@@ -179,6 +183,19 @@ const taskVerifyHandler = async (req, res) => {
     success: true,
   });
 };
+function formatDate(date) {
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+  let hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "pm" : "am";
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const formattedTime = `${hours}:${minutes}${ampm}`;
+
+  return `${day}-${month}-${year},${formattedTime}`;
+}
 const taskDelete = async (req, res) => {
   const { _id } = req.body;
 
@@ -236,6 +253,9 @@ const modifyTaskHandler = async (req, res) => {
     task.newModifyTimeFrom = newModifyTimeFrom;
     task.newModifyDate = newModifyDate;
     task.isModify = true;
+    task.tasktype ="modifyed";
+    task.completiontime="";
+    task.completion=false;
     const modifiedTask = await task.save();
     if (!modifiedTask) {
       return res.status(500).json({
@@ -287,6 +307,9 @@ const updateTaskHandler = async (req, res) => {
     task.newUpdatedTimeFrom = newUpdatedTimeFrom;
     task.newUpdateDate = newUpdateDate;
     task.isUpdated = true;
+    task.tasktype ="updated";
+    task.completiontime="";
+    task.completion=false;
     const updatedTask = await task.save();
     if (!updatedTask) {
       return res.status(500).json({
