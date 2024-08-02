@@ -28,6 +28,9 @@ const taskSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    completiontime:{
+      type: String,
+    },
     isVerify: {
       type: Boolean,
       default: false,
@@ -84,6 +87,12 @@ const taskSchema = new Schema(
     timeExceeded:{
       type: Boolean,
       default: false
+    },
+    tasktype:{
+      type: String,
+      required: true,
+      enum: ["new", "modifyed", "updated",],
+      default: "new",
     }
   },
   {
