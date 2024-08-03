@@ -692,7 +692,7 @@ const getCurrentEmployee = async (req, res) => {
 
     return res.status(200).json({
       message: "All Employees fetched with login counts!",
-      data: sanitizedEmployees,
+      data: sanitizedEmployees[0],
       count: sanitizedEmployees.length,
       success: true,
     });
