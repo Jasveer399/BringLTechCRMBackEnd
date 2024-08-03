@@ -148,12 +148,10 @@ const loginEmployee = async (req, res) => {
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       user._id
     );
-
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
     const today = now;
-
-    const hasAvailabilityToday = user.availability.some((entry) => {
+    const todayAvailabilityIndex = user.availability.findIndex((entry) => {
       const entryDate = parseCustomDate(entry.availableFrom);
       return (
         entryDate.getDate() === today.getDate() &&
@@ -162,7 +160,9 @@ const loginEmployee = async (req, res) => {
       );
     });
 
-    if (!hasAvailabilityToday) {
+    if (todayAvailabilityIndex !== -1) {
+      user.availability[todayAvailabilityIndex].isAvailable = true;
+    } else {
       const newAvailability = {
         availableFrom: formattedLoginTimestamp,
         owner: "Employee",
@@ -173,16 +173,13 @@ const loginEmployee = async (req, res) => {
 
     user.refreshToken = refreshToken;
     await user.save();
-
     const loggedInUser = await Employee.findById(user._id).select(
       "-password -refreshToken"
     );
-
     const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     };
-
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
@@ -203,6 +200,7 @@ const loginEmployee = async (req, res) => {
     });
   }
 };
+
 function parseCustomDate(dateString) {
   const [datePart, timePart] = dateString.split(",");
   const [day, month, year] = datePart.split("-");
@@ -235,15 +233,19 @@ const logoutEmployee = async (req, res) => {
 
     // Update the specific availability entry
     const updatedUser = await Employee.findOneAndUpdate(
-      { 
+      {
         _id: user._id,
-        "availability._id": new mongoose.Types.ObjectId(id)
+        "availability._id": new mongoose.Types.ObjectId(id),
       },
-      { 
-        $set: { "availability.$.availableTo": formattedLoginTimestamp }
+      {
+        $set: {
+          "availability.$.availableTo": formattedLoginTimestamp,
+          "availability.$.isAvailable": false,
+        },
       },
       { new: true }
     );
+    console.log("updatedUser =>", updatedUser);
 
     if (!updatedUser) {
       return res.status(404).json({
@@ -268,7 +270,6 @@ const logoutEmployee = async (req, res) => {
         success: true,
         data: updatedUser,
       });
-
   } catch (error) {
     console.error("Logout Error:", error);
     return res.status(500).json({
@@ -278,63 +279,6 @@ const logoutEmployee = async (req, res) => {
     });
   }
 };
-
-
-// const logoutEmployee = async (req, res) => {
-//   const { id } = req.body;
-//   if (!id) {
-//     return res.status(400).json({
-//       message: "All fields are required",
-//       success: false,
-//     });
-//   }
-//   console.log("Req Body",req.body)
-//   try {
-//     const user = await Employee.findById(req.user?._id);
-//     const now = new Date();
-//     const formattedLoginTimestamp = formatDate(now);
-//     const agg = await Employee.aggregate([
-//       {
-//         $match: {
-//           _id: user._id,
-//         },
-//       },
-//       {
-//         $unwind: "$availability",
-//       },
-//       {
-//         $match: {
-//           "availability._id": new mongoose.Types.ObjectId(id),
-//         },
-//       },
-//       {
-//         $set: {
-//           "availability.availableTo": formattedLoginTimestamp,
-//         },
-//       },
-//     ]);
-//     console.log("Aggggggggggggg",agg)
-//     const options = {
-//       httpOnly: true,
-//       secure: false,
-//     };
-//     return res
-//       .status(200)
-//       .clearCookie("accessToken", options)
-//       .clearCookie("refreshToken", options)
-//       .json({
-//         messaage: "Epmloyee Logged Out Successfully",
-//         success: true,
-//         data:user,
-//       });
-//   } catch (error) {
-//     return res.status(500).json({
-//       messaage: "Error While Epmloyee Logged Out",
-//       success: false,
-//       error: error.messaage,
-//     });
-//   }
-// };
 function formatDate(date) {
   const day = date.getDate().toString().padStart(2, "0");
   const month = date.getMonth() + 1;
@@ -590,15 +534,15 @@ const getSpecificEmployeeTasks = async (req, res) => {
   }
 };
 const getCurrentEmployee = async (req, res) => {
-  const d = new Date()
-  const year = d.getFullYear()
-  const month = d.getMonth() + 1
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = d.getMonth() + 1;
   try {
     const pipeline = [
       {
         $match: {
-          _id: req.user?._id
-        }
+          _id: req.user?._id,
+        },
       },
       {
         $addFields: {
@@ -606,16 +550,16 @@ const getCurrentEmployee = async (req, res) => {
             $cond: {
               if: { $isArray: "$availability" },
               then: "$availability",
-              else: []
-            }
-          }
-        }
+              else: [],
+            },
+          },
+        },
       },
       {
         $unwind: {
           path: "$availabilityArray",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $addFields: {
@@ -624,34 +568,102 @@ const getCurrentEmployee = async (req, res) => {
               if: { $ne: ["$availabilityArray", undefined] },
               then: {
                 $dateFromParts: {
-                  year: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availabilityArray.availableFrom", ","] }, 0] }, "-"] }, 2] } },
-                  month: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availabilityArray.availableFrom", ","] }, 0] }, "-"] }, 1] } },
-                  day: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availabilityArray.availableFrom", ","] }, 0] }, "-"] }, 0] } }
-                }
+                  year: {
+                    $toInt: {
+                      $arrayElemAt: [
+                        {
+                          $split: [
+                            {
+                              $arrayElemAt: [
+                                {
+                                  $split: [
+                                    "$availabilityArray.availableFrom",
+                                    ",",
+                                  ],
+                                },
+                                0,
+                              ],
+                            },
+                            "-",
+                          ],
+                        },
+                        2,
+                      ],
+                    },
+                  },
+                  month: {
+                    $toInt: {
+                      $arrayElemAt: [
+                        {
+                          $split: [
+                            {
+                              $arrayElemAt: [
+                                {
+                                  $split: [
+                                    "$availabilityArray.availableFrom",
+                                    ",",
+                                  ],
+                                },
+                                0,
+                              ],
+                            },
+                            "-",
+                          ],
+                        },
+                        1,
+                      ],
+                    },
+                  },
+                  day: {
+                    $toInt: {
+                      $arrayElemAt: [
+                        {
+                          $split: [
+                            {
+                              $arrayElemAt: [
+                                {
+                                  $split: [
+                                    "$availabilityArray.availableFrom",
+                                    ",",
+                                  ],
+                                },
+                                0,
+                              ],
+                            },
+                            "-",
+                          ],
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                },
               },
-              else: null
-            }
-          }
-        }
+              else: null,
+            },
+          },
+        },
       },
       {
         $group: {
           _id: "$_id",
           employee: { $first: "$$ROOT" },
-          loginCount: { 
-            $sum: { 
+          loginCount: {
+            $sum: {
               $cond: [
-                { $and: [
-                  { $ne: ["$parsedDate", null] },
-                  { $eq: [{ $year: "$parsedDate" }, parseInt(year)] },
-                  { $eq: [{ $month: "$parsedDate" }, parseInt(month)] }
-                ]},
-                1, 
-                0
-              ] 
-            } 
-          }
-        }
+                {
+                  $and: [
+                    { $ne: ["$parsedDate", null] },
+                    { $eq: [{ $year: "$parsedDate" }, parseInt(year)] },
+                    { $eq: [{ $month: "$parsedDate" }, parseInt(month)] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
       },
       {
         $project: {
@@ -662,15 +674,15 @@ const getCurrentEmployee = async (req, res) => {
                 $arrayToObject: {
                   $filter: {
                     input: { $objectToArray: "$employee" },
-                    cond: { $ne: ["$$this.k", "availabilityArray"] }
-                  }
-                }
+                    cond: { $ne: ["$$this.k", "availabilityArray"] },
+                  },
+                },
               },
-              { loginCount: "$loginCount" }
-            ]
-          }
-        }
-      }
+              { loginCount: "$loginCount" },
+            ],
+          },
+        },
+      },
     ];
 
     const employee = await Employee.aggregate(pipeline);
@@ -688,7 +700,7 @@ const getCurrentEmployee = async (req, res) => {
       return sanitizedEmployee;
     });
 
-    console.log("sanitizedEmployees: ", sanitizedEmployees)
+    console.log("sanitizedEmployees: ", sanitizedEmployees);
 
     return res.status(200).json({
       message: "All Employees fetched with login counts!",
@@ -696,7 +708,6 @@ const getCurrentEmployee = async (req, res) => {
       count: sanitizedEmployees.length,
       success: true,
     });
-
 
     // const employee = await Employee.findById(req.user?._id).select(
     //   "-password -refreshToken"
@@ -723,7 +734,7 @@ const getCurrentEmployee = async (req, res) => {
 };
 const getSpecificEmployeeData = async (req, res) => {
   const { id } = req.body;
-  console.log("Req Body",req.body)
+  console.log("Req Body", req.body);
   if (!id) {
     return res.status(400).json({
       messaage: "Employee ID is required",
