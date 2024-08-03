@@ -449,23 +449,131 @@ const getSpecificEmployeeTasks = async (req, res) => {
   }
 };
 const getCurrentEmployee = async (req, res) => {
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = d.getMonth() + 1
   try {
-    const employee = await Employee.findById(req.user?._id).select(
-      "-password -refreshToken"
-    );
+    // const user = req.user?._id
+    const pipeline = [
+      {
+        $match: {
+          _id: req.user?._id
+        }
+      },
+      {
+        $addFields: {
+          availabilityArray: {
+            $cond: {
+              if: { $isArray: "$availability" },
+              then: "$availability",
+              else: []
+            }
+          }
+        }
+      },
+      {
+        $unwind: {
+          path: "$availabilityArray",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $addFields: {
+          parsedDate: {
+            $cond: {
+              if: { $ne: ["$availabilityArray", undefined] },
+              then: {
+                $dateFromParts: {
+                  year: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availabilityArray.availableFrom", ","] }, 0] }, "-"] }, 2] } },
+                  month: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availabilityArray.availableFrom", ","] }, 0] }, "-"] }, 1] } },
+                  day: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availabilityArray.availableFrom", ","] }, 0] }, "-"] }, 0] } }
+                }
+              },
+              else: null
+            }
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id",
+          employee: { $first: "$$ROOT" },
+          loginCount: { 
+            $sum: { 
+              $cond: [
+                { $and: [
+                  { $ne: ["$parsedDate", null] },
+                  { $eq: [{ $year: "$parsedDate" }, parseInt(year)] },
+                  { $eq: [{ $month: "$parsedDate" }, parseInt(month)] }
+                ]},
+                1, 
+                0
+              ] 
+            } 
+          }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          employee: {
+            $mergeObjects: [
+              {
+                $arrayToObject: {
+                  $filter: {
+                    input: { $objectToArray: "$employee" },
+                    cond: { $ne: ["$$this.k", "availabilityArray"] }
+                  }
+                }
+              },
+              { loginCount: "$loginCount" }
+            ]
+          }
+        }
+      }
+    ];
+
+    const employee = await Employee.aggregate(pipeline);
 
     if (!employee) {
-      return res.status(400).json({
-        messaage: "Employee Not Found !!",
+      return res.status(404).json({
+        message: "No employees found",
         success: false,
       });
     }
 
+    // Remove sensitive information
+    const sanitizedEmployees = employee.map(({ employee }) => {
+      const { password, refreshToken, ...sanitizedEmployee } = employee;
+      return sanitizedEmployee;
+    });
+
+    console.log("sanitizedEmployees: ", sanitizedEmployees)
+
     return res.status(200).json({
-      data: employee,
-      messaage: "Employee fetched !!",
+      message: "All Employees fetched with login counts!",
+      data: sanitizedEmployees,
+      count: sanitizedEmployees.length,
       success: true,
     });
+
+
+    // const employee = await Employee.findById(req.user?._id).select(
+    //   "-password -refreshToken"
+    // );
+
+    // if (!employee) {
+    //   return res.status(400).json({
+    //     messaage: "Employee Not Found !!",
+    //     success: false,
+    //   });
+    // }
+
+    // return res.status(200).json({
+    //   data: employee,
+    //   messaage: "Employee fetched !!",
+    //   success: true,
+    // });
   } catch (error) {
     return res.status(500).json({
       messaage: "Error while fetching employee !!",
