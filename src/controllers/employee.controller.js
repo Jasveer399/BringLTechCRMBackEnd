@@ -219,51 +219,122 @@ function parseCustomDate(dateString) {
   return new Date(year, month - 1, day, parsedHours, parseInt(minutes));
 }
 const logoutEmployee = async (req, res) => {
-  const { id } = req.query;
+  const { id } = req.body;
+  if (!id) {
+    return res.status(400).json({
+      message: "All fields are required",
+      success: false,
+    });
+  }
+  console.log("Req Body", req.body);
+
   try {
     const user = await Employee.findById(req.user?._id);
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
-    const agg = await Employee.aggregate([
-      {
-        $match: {
-          _id: user._id,
-        },
+
+    // Update the specific availability entry
+    const updatedUser = await Employee.findOneAndUpdate(
+      { 
+        _id: user._id,
+        "availability._id": new mongoose.Types.ObjectId(id)
       },
-      {
-        $unwind: "$availability",
+      { 
+        $set: { "availability.$.availableTo": formattedLoginTimestamp }
       },
-      {
-        $match: {
-          "availability._id": new mongoose.Types.ObjectId(id),
-        },
-      },
-      {
-        $set: {
-          "availability.availableTo": formattedLoginTimestamp,
-        },
-      },
-    ]);
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        message: "User or availability entry not found",
+        success: false,
+      });
+    }
+
+    console.log("Updated User", updatedUser);
+
     const options = {
       httpOnly: true,
       secure: false,
     };
+
     return res
       .status(200)
       .clearCookie("accessToken", options)
       .clearCookie("refreshToken", options)
       .json({
-        messaage: "Epmloyee Logged Out Successfully",
+        message: "Employee Logged Out Successfully",
         success: true,
+        data: updatedUser,
       });
+
   } catch (error) {
+    console.error("Logout Error:", error);
     return res.status(500).json({
-      messaage: "Error While Epmloyee Logged Out",
+      message: "Error While Employee Logged Out",
       success: false,
-      error: error,
+      error: error.message,
     });
   }
 };
+
+
+// const logoutEmployee = async (req, res) => {
+//   const { id } = req.body;
+//   if (!id) {
+//     return res.status(400).json({
+//       message: "All fields are required",
+//       success: false,
+//     });
+//   }
+//   console.log("Req Body",req.body)
+//   try {
+//     const user = await Employee.findById(req.user?._id);
+//     const now = new Date();
+//     const formattedLoginTimestamp = formatDate(now);
+//     const agg = await Employee.aggregate([
+//       {
+//         $match: {
+//           _id: user._id,
+//         },
+//       },
+//       {
+//         $unwind: "$availability",
+//       },
+//       {
+//         $match: {
+//           "availability._id": new mongoose.Types.ObjectId(id),
+//         },
+//       },
+//       {
+//         $set: {
+//           "availability.availableTo": formattedLoginTimestamp,
+//         },
+//       },
+//     ]);
+//     console.log("Aggggggggggggg",agg)
+//     const options = {
+//       httpOnly: true,
+//       secure: false,
+//     };
+//     return res
+//       .status(200)
+//       .clearCookie("accessToken", options)
+//       .clearCookie("refreshToken", options)
+//       .json({
+//         messaage: "Epmloyee Logged Out Successfully",
+//         success: true,
+//         data:user,
+//       });
+//   } catch (error) {
+//     return res.status(500).json({
+//       messaage: "Error While Epmloyee Logged Out",
+//       success: false,
+//       error: error.messaage,
+//     });
+//   }
+// };
 function formatDate(date) {
   const day = date.getDate().toString().padStart(2, "0");
   const month = date.getMonth() + 1;
@@ -523,7 +594,6 @@ const getCurrentEmployee = async (req, res) => {
   const year = d.getFullYear()
   const month = d.getMonth() + 1
   try {
-    // const user = req.user?._id
     const pipeline = [
       {
         $match: {
@@ -622,7 +692,7 @@ const getCurrentEmployee = async (req, res) => {
 
     return res.status(200).json({
       message: "All Employees fetched with login counts!",
-      data: sanitizedEmployees[0],
+      data: sanitizedEmployees,
       count: sanitizedEmployees.length,
       success: true,
     });

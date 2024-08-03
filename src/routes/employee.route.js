@@ -31,7 +31,7 @@ router.post(
 router.post("/login", loginEmployee);
 router.post("/updatepassword", verifyJWT(["employee"]), updatePassword),
   router.get("/getAllEmployee", getAllEmployee);
-router.get("/logout", verifyJWT(["employee"]), logoutEmployee);
+router.post("/logout", verifyJWT(["employee"]), logoutEmployee);
 router.get("/getCurrentEmployee", verifyJWT(["employee"]), getCurrentEmployee);
 router.post("/getSpecificEmployeeData",getSpecificEmployeeData)
 
