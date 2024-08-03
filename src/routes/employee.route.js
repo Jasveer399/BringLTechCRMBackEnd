@@ -3,6 +3,7 @@ import {
   getAllEmployee,
   getCurrentEmployee,
   getEmployeeData,
+  getSpecificEmployeeData,
   getSpecificEmployeeTasks,
   loginEmployee,
   logoutEmployee,
@@ -32,5 +33,6 @@ router.post("/updatepassword", verifyJWT(["employee"]), updatePassword),
   router.get("/getAllEmployee", getAllEmployee);
 router.get("/logout", verifyJWT(["employee"]), logoutEmployee);
 router.get("/getCurrentEmployee", verifyJWT(["employee"]), getCurrentEmployee);
+router.post("/getSpecificEmployeeData",getSpecificEmployeeData)
 
 export default router;

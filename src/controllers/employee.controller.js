@@ -148,18 +148,20 @@ const loginEmployee = async (req, res) => {
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       user._id
     );
-    
+
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
     const today = now;
-    
-    const hasAvailabilityToday = user.availability.some(entry => {
+
+    const hasAvailabilityToday = user.availability.some((entry) => {
       const entryDate = parseCustomDate(entry.availableFrom);
-      return entryDate.getDate() === today.getDate() &&
-             entryDate.getMonth() === today.getMonth() &&
-             entryDate.getFullYear() === today.getFullYear();
+      return (
+        entryDate.getDate() === today.getDate() &&
+        entryDate.getMonth() === today.getMonth() &&
+        entryDate.getFullYear() === today.getFullYear()
+      );
     });
-    
+
     if (!hasAvailabilityToday) {
       const newAvailability = {
         availableFrom: formattedLoginTimestamp,
@@ -168,19 +170,19 @@ const loginEmployee = async (req, res) => {
       };
       user.availability.push(newAvailability);
     }
-    
+
     user.refreshToken = refreshToken;
     await user.save();
-    
+
     const loggedInUser = await Employee.findById(user._id).select(
       "-password -refreshToken"
     );
-    
+
     const options = {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
     };
-    
+
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
@@ -192,25 +194,25 @@ const loginEmployee = async (req, res) => {
         success: true,
       });
   } catch (error) {
-    console.error('Error in loginEmployee:', error);
+    console.error("Error in loginEmployee:", error);
     return res.status(500).json({
       message: "Something went wrong while logging in user",
       success: false,
       error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
     });
   }
 };
 function parseCustomDate(dateString) {
-  const [datePart, timePart] = dateString.split(',');
-  const [day, month, year] = datePart.split('-');
+  const [datePart, timePart] = dateString.split(",");
+  const [day, month, year] = datePart.split("-");
   const [time, ampm] = timePart.split(/(?=[ap]m)/i);
-  const [hours, minutes] = time.split(':');
-  
+  const [hours, minutes] = time.split(":");
+
   let parsedHours = parseInt(hours);
-  if (ampm.toLowerCase() === 'pm' && parsedHours !== 12) {
+  if (ampm.toLowerCase() === "pm" && parsedHours !== 12) {
     parsedHours += 12;
-  } else if (ampm.toLowerCase() === 'am' && parsedHours === 12) {
+  } else if (ampm.toLowerCase() === "am" && parsedHours === 12) {
     parsedHours = 0;
   }
 
@@ -287,16 +289,16 @@ const getAllEmployee = async (req, res) => {
             $cond: {
               if: { $isArray: "$availability" },
               then: "$availability",
-              else: []
-            }
-          }
-        }
+              else: [],
+            },
+          },
+        },
       },
       {
         $unwind: {
           path: "$availabilityArray",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $addFields: {
@@ -305,34 +307,102 @@ const getAllEmployee = async (req, res) => {
               if: { $ne: ["$availabilityArray", undefined] },
               then: {
                 $dateFromParts: {
-                  year: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availabilityArray.availableFrom", ","] }, 0] }, "-"] }, 2] } },
-                  month: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availabilityArray.availableFrom", ","] }, 0] }, "-"] }, 1] } },
-                  day: { $toInt: { $arrayElemAt: [{ $split: [{ $arrayElemAt: [{ $split: ["$availabilityArray.availableFrom", ","] }, 0] }, "-"] }, 0] } }
-                }
+                  year: {
+                    $toInt: {
+                      $arrayElemAt: [
+                        {
+                          $split: [
+                            {
+                              $arrayElemAt: [
+                                {
+                                  $split: [
+                                    "$availabilityArray.availableFrom",
+                                    ",",
+                                  ],
+                                },
+                                0,
+                              ],
+                            },
+                            "-",
+                          ],
+                        },
+                        2,
+                      ],
+                    },
+                  },
+                  month: {
+                    $toInt: {
+                      $arrayElemAt: [
+                        {
+                          $split: [
+                            {
+                              $arrayElemAt: [
+                                {
+                                  $split: [
+                                    "$availabilityArray.availableFrom",
+                                    ",",
+                                  ],
+                                },
+                                0,
+                              ],
+                            },
+                            "-",
+                          ],
+                        },
+                        1,
+                      ],
+                    },
+                  },
+                  day: {
+                    $toInt: {
+                      $arrayElemAt: [
+                        {
+                          $split: [
+                            {
+                              $arrayElemAt: [
+                                {
+                                  $split: [
+                                    "$availabilityArray.availableFrom",
+                                    ",",
+                                  ],
+                                },
+                                0,
+                              ],
+                            },
+                            "-",
+                          ],
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                },
               },
-              else: null
-            }
-          }
-        }
+              else: null,
+            },
+          },
+        },
       },
       {
         $group: {
           _id: "$_id",
           employee: { $first: "$$ROOT" },
-          loginCount: { 
-            $sum: { 
+          loginCount: {
+            $sum: {
               $cond: [
-                { $and: [
-                  { $ne: ["$parsedDate", null] },
-                  { $eq: [{ $year: "$parsedDate" }, parseInt(year)] },
-                  { $eq: [{ $month: "$parsedDate" }, parseInt(month)] }
-                ]},
-                1, 
-                0
-              ] 
-            } 
-          }
-        }
+                {
+                  $and: [
+                    { $ne: ["$parsedDate", null] },
+                    { $eq: [{ $year: "$parsedDate" }, parseInt(year)] },
+                    { $eq: [{ $month: "$parsedDate" }, parseInt(month)] },
+                  ],
+                },
+                1,
+                0,
+              ],
+            },
+          },
+        },
       },
       {
         $project: {
@@ -343,15 +413,15 @@ const getAllEmployee = async (req, res) => {
                 $arrayToObject: {
                   $filter: {
                     input: { $objectToArray: "$employee" },
-                    cond: { $ne: ["$$this.k", "availabilityArray"] }
-                  }
-                }
+                    cond: { $ne: ["$$this.k", "availabilityArray"] },
+                  },
+                },
               },
-              { loginCount: "$loginCount" }
-            ]
-          }
-        }
-      }
+              { loginCount: "$loginCount" },
+            ],
+          },
+        },
+      },
     ];
 
     const allEmployees = await Employee.aggregate(pipeline);
@@ -581,7 +651,33 @@ const getCurrentEmployee = async (req, res) => {
     });
   }
 };
+const getSpecificEmployeeData = async (req, res) => {
+  const { id } = req.body;
+  console.log("Req Body",req.body)
+  if (!id) {
+    return res.status(400).json({
+      messaage: "Employee ID is required",
+      success: false,
+    });
+  }
+  try {
+    const employee = await Employee.findById(id).select(
+      "-password -refreshToken"
+    );
+    if (!employee) {
+      return res.status(400).json({
+        messaage: "Employee Not Found!!",
+        success: false,
+      });
+    }
 
+    return res.status(200).json({
+      data: employee,
+      messaage: "Employee fetched!!",
+      success: true,
+    });
+  } catch (error) {}
+};
 export {
   createEmployee,
   loginEmployee,
@@ -591,4 +687,5 @@ export {
   getEmployeeData,
   getSpecificEmployeeTasks,
   getCurrentEmployee,
+  getSpecificEmployeeData,
 };
