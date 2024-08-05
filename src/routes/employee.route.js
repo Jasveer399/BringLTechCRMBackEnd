@@ -7,12 +7,15 @@ import {
   getSpecificEmployeeTasks,
   loginEmployee,
   logoutEmployee,
+  updateEmployee,
   updatePassword,
+  uploadImage,
 } from "../controllers/employee.controller.js";
 import { Router } from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
-
+import multer from "multer";
 const router = Router();
+const upload = multer({ dest: 'uploads/' });
 
 router.post("/", createEmployee);
 router.post("/login", loginEmployee);
@@ -33,6 +36,8 @@ router.post("/updatepassword", verifyJWT(["employee"]), updatePassword),
   router.get("/getAllEmployee", getAllEmployee);
 router.post("/logout", verifyJWT(["employee"]), logoutEmployee);
 router.get("/getCurrentEmployee", verifyJWT(["employee"]), getCurrentEmployee);
-router.post("/getSpecificEmployeeData",getSpecificEmployeeData)
+router.post("/getSpecificEmployeeData",getSpecificEmployeeData);
+router.post('/upload-image', upload.single('image'),uploadImage);
+router.post("/updateEmployee", verifyJWT(["employee"]), updateEmployee)
 
 export default router;

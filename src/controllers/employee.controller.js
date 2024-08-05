@@ -2,6 +2,8 @@ import { Employee } from "../model/employee.model.js";
 import { nanoid } from "nanoid";
 import { notifyAdmin, onMailer } from "../utils/mailer.js";
 import mongoose from "mongoose";
+import { uploadFileonCloudinary } from "../utils/cloudinary.js";
+import fs from "fs"  
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -200,7 +202,6 @@ const loginEmployee = async (req, res) => {
     });
   }
 };
-
 function parseCustomDate(dateString) {
   const [datePart, timePart] = dateString.split(",");
   const [day, month, year] = datePart.split("-");
@@ -759,6 +760,60 @@ const getSpecificEmployeeData = async (req, res) => {
     });
   } catch (error) {}
 };
+const uploadImage = async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No file uploaded" });
+  }
+  console.log("Uploading image =>", req.file);
+  
+  if (!fs.existsSync(req.file.path)) {
+    return res.status(400).json({ error: "File does not exist at the specified path" });
+  }
+  try {
+    console.log("Image Path =>", req.file.path);
+    const result = await uploadFileonCloudinary(req.file.path);
+    console.log("Result =>", result);
+    if (result && result.url) {
+      res.json({ url: result.url });
+    } else {
+      throw new Error("Failed to upload image to Cloudinary");
+    }
+  } catch (error) {
+    console.error("Error in image upload:", error);
+    res.status(500).json({ error: "Failed to upload image", details: error.message });
+  }
+};
+const updateEmployee = async (req, res) => {
+  const {profile}= req.body;
+  try {
+    const employee = await Employee.findByIdAndUpdate(
+      req.user?._id,
+      { $set: {
+        name:profile.firstName,
+        email:profile.email,
+        phoneNo:profile.phone,
+        address:profile.address,
+        gender:profile.gender,
+        dob:profile.dateOfBirth,
+        twitter:profile.twitter,
+        linkedIn:profile.linkedIn,
+        profileImageUrl:profile.profileImageUrl,
+      } },
+      { new: true }
+    ).select("-password -refreshToken");
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+    return res.status(200).json({
+      message: "Employee updated successfully",
+      employee,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error in updating employee:", error);
+    res.status(500).json({ message: "Failed to update employee", details: error.message });
+  }
+}
 export {
   createEmployee,
   loginEmployee,
@@ -769,4 +824,6 @@ export {
   getSpecificEmployeeTasks,
   getCurrentEmployee,
   getSpecificEmployeeData,
+  uploadImage,
+  updateEmployee,
 };

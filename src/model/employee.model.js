@@ -29,6 +29,28 @@ const employeeSchema = new Schema(
         refreshToken: {
             type: String,
         },
+        phoneNo:{
+            type: String,
+        },
+        address: {
+            type: String,
+        },
+        gender:{
+            type: String,
+            enum: ['Male', 'Female', 'Other'],
+        },
+        dob:{
+            type: String,
+        },
+        twitter:{
+            type: String,
+        },
+        linkedIn:{
+            type: String,
+        },
+        profileImageUrl:{
+            type: String,
+        },
         availability: [
             {
                 availableTo: String,
