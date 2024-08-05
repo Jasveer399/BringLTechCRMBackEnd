@@ -172,6 +172,7 @@ const loginEmployee = async (req, res) => {
     }
 
     user.refreshToken = refreshToken;
+    user.isOnline = true
     await user.save();
     const loggedInUser = await Employee.findById(user._id).select(
       "-password -refreshToken"
@@ -240,7 +241,8 @@ const logoutEmployee = async (req, res) => {
       {
         $set: {
           "availability.$.availableTo": formattedLoginTimestamp,
-          "availability.$.isAvailable": false,
+          // "availability.$.isAvailable": false,
+          isOnline: false
         },
       },
       { new: true }
