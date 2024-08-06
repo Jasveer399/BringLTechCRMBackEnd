@@ -90,6 +90,7 @@ const getAllTasks = async (req, res) => {
           modifycompletiontime: 1,
           updatedcompletiontime: 1,
           timeExceeded: 1,
+          priorityTask: 1,
           assignedTo: {
             _id: "$assignedEmployee._id",
             name: "$assignedEmployee.name",
@@ -434,11 +435,19 @@ const setPriorityTask = async (req, res) => {
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
-    return res.status(200).json({ message: "Task priority updated successfully", task });
+    return res.status(200).json({
+      message: "Task priority updated successfully",
+      task,
+      success: true,
+    });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Error setting task priority", error: error.message });
+      .json({
+        message: "Error setting task priority",
+        error: error.message,
+        success: false,
+      });
   }
 };
 export {
