@@ -4,6 +4,7 @@ import {
   getSpecificEmployeeTask,
   getTodayTasks,
   modifyTaskHandler,
+  setPriorityTask,
   taskAdminVerificationHandler,
   taskDelete,
   taskVerifyHandler,
@@ -31,4 +32,5 @@ router.patch(
   taskAdminVerificationHandler
 );
 router.post("/gettodaytask", verifyJWT(["admin"]), getTodayTasks);
+router.post("/setPriorityTask", verifyJWT(["admin"]), setPriorityTask)
 export default router;

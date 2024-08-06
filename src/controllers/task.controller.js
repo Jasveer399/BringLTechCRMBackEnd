@@ -87,9 +87,9 @@ const getAllTasks = async (req, res) => {
           tasktype: 1,
           completiontime: 1,
           taskcompleteLink: 1,
-          modifycompletiontime:1,
-          updatedcompletiontime:1,
-          timeExceeded:1,
+          modifycompletiontime: 1,
+          updatedcompletiontime: 1,
+          timeExceeded: 1,
           assignedTo: {
             _id: "$assignedEmployee._id",
             name: "$assignedEmployee.name",
@@ -162,7 +162,7 @@ const taskVerifyHandler = async (req, res) => {
   const { _id, link, timeExceedChecker, taskType } = req.body;
   const now = new Date();
   const completiontime = formatDate(now);
-  let verifiedTask
+  let verifiedTask;
   if (taskType && taskType === "Modified Task") {
     verifiedTask = await Task.findByIdAndUpdate(
       _id,
@@ -203,7 +203,7 @@ const taskVerifyHandler = async (req, res) => {
       { new: true }
     );
   }
-  
+
   if (!verifiedTask) {
     return res.status(500).json({
       messaage: "Error while verifying task",
@@ -294,8 +294,7 @@ const modifyTaskHandler = async (req, res) => {
     task.newModifyDate = newModifyDate;
     task.isModify = true;
     task.tasktype = "modifyed";
-    task.modifycompletiontime=completiontime,
-    task.completion = false;
+    (task.modifycompletiontime = completiontime), (task.completion = false);
     const modifiedTask = await task.save();
     if (!modifiedTask) {
       return res.status(500).json({
@@ -419,6 +418,29 @@ const getTodayTasks = async (req, res) => {
       .json({ message: "Error fetching tasks", error: error.message });
   }
 };
+
+const setPriorityTask = async (req, res) => {
+  const { taskId, priority } = req.body;
+  try {
+    const task = await Task.findByIdAndUpdate(
+      taskId,
+      {
+        $set: {
+          priorityTask: priority,
+        },
+      },
+      { new: true }
+    );
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+    return res.status(200).json({ message: "Task priority updated successfully", task });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error setting task priority", error: error.message });
+  }
+};
 export {
   createTask,
   getAllTasks,
@@ -429,4 +451,5 @@ export {
   updateTaskHandler,
   taskAdminVerificationHandler,
   getTodayTasks,
+  setPriorityTask,
 };

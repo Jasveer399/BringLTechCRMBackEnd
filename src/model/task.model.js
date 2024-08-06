@@ -116,7 +116,10 @@ const taskSchema = new Schema(
       enum: ["new", "modifyed", "updated",],
       default: "new",
     },
-    
+    priorityTask:{
+      type: Boolean,
+      default: false,
+    }
   },
   {
     timestamps: true,
