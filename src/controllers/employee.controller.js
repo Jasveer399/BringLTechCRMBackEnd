@@ -4,6 +4,7 @@ import { notifyAdmin, onMailer } from "../utils/mailer.js";
 import mongoose from "mongoose";
 import { uploadFileonCloudinary } from "../utils/cloudinary.js";
 import fs from "fs";
+import  bcrypt  from "bcrypt"
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -847,6 +848,41 @@ const changeOldPassword = async (req, res) => {
     });
   }
 };
+const changeNewPassword = async (req, res) => {
+  const { newPassword } = req.body;
+  if (!newPassword) {
+    return res
+      .status(400)
+      .json({ message: "New password is required", success: false });
+  }
+  try {
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const employee = await Employee.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          password: hashedPassword,
+        },
+      },
+      { new: true }
+    ).select("-password -refreshToken");
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+    return res.status(200).json({
+      message: "Password updated successfully",
+      employee,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error in changing new password:", error);
+    res.status(500).json({
+      message: "Failed to update password",
+      details: error.message,
+      success: false,
+    });
+  }
+};
 export {
   createEmployee,
   loginEmployee,
@@ -859,4 +895,5 @@ export {
   getSpecificEmployeeData,
   uploadImage,
   updateEmployee,
+  changeNewPassword,
 };

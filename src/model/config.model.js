@@ -19,6 +19,4 @@ const configSchema = new mongoose.Schema({
   options: [employeeRoleSchema]
 })
 
-const Config = mongoose.model('Config', configSchema)
-
-module.exports = Config;
+export const Config = mongoose.model('Config', configSchema)
