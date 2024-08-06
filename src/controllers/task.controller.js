@@ -158,21 +158,51 @@ const getSpecificEmployeeTask = async (req, res) => {
   });
 };
 const taskVerifyHandler = async (req, res) => {
-  const { _id, link, timeExceedChecker } = req.body;
+  const { _id, link, timeExceedChecker, taskType } = req.body;
   const now = new Date();
   const completiontime = formatDate(now);
-  const verifiedTask = await Task.findByIdAndUpdate(
-    _id,
-    {
-      $set: {
-        completion: true,
-        taskcompleteLink: link,
-        timeExceeded: timeExceedChecker,
-        completiontime,
+  let verifiedTask
+  if (taskType && taskType === "Modified Task") {
+    verifiedTask = await Task.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          completion: true,
+          modifytasklink: link,
+          modifytimeExceeded: timeExceedChecker,
+          modifycompletiontime: completiontime,
+        },
       },
-    },
-    { new: true }
-  );
+      { new: true }
+    );
+  } else if (taskType && taskType === "Updated Task") {
+    verifiedTask = await Task.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          completion: true,
+          updatedtasklink: link,
+          updatedtimeExceeded: timeExceedChecker,
+          updatedcompletiontime: completiontime,
+        },
+      },
+      { new: true }
+    );
+  } else {
+    verifiedTask = await Task.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          completion: true,
+          taskcompleteLink: link,
+          timeExceeded: timeExceedChecker,
+          completiontime: completiontime,
+        },
+      },
+      { new: true }
+    );
+  }
+  
   if (!verifiedTask) {
     return res.status(500).json({
       messaage: "Error while verifying task",
