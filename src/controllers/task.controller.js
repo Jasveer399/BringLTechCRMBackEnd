@@ -439,6 +439,7 @@ const setPriorityTask = async (req, res) => {
       message: "Task priority updated successfully",
       task,
       success: true,
+      priority:task.priorityTask,
     });
   } catch (error) {
     res
