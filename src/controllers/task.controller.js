@@ -89,6 +89,7 @@ const getAllTasks = async (req, res) => {
           taskcompleteLink: 1,
           modifycompletiontime:1,
           updatedcompletiontime:1,
+          timeExceeded:1,
           assignedTo: {
             _id: "$assignedEmployee._id",
             name: "$assignedEmployee.name",

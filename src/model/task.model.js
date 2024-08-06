@@ -43,14 +43,14 @@ const taskSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Employee",
     },
+    timeExceeded:{
+      type: Boolean,
+      default: false
+    },
 ///////////////////////////////////////////////////////////////////////////
     isModify: {
       type: Boolean,
       default: false,
-    },
-    timeExceeded:{
-      type: Boolean,
-      default: false
     },
     newModifyDes: {
       type: String,
@@ -115,7 +115,8 @@ const taskSchema = new Schema(
       required: true,
       enum: ["new", "modifyed", "updated",],
       default: "new",
-    }
+    },
+    
   },
   {
     timestamps: true,

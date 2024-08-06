@@ -3,7 +3,7 @@ import { nanoid } from "nanoid";
 import { notifyAdmin, onMailer } from "../utils/mailer.js";
 import mongoose from "mongoose";
 import { uploadFileonCloudinary } from "../utils/cloudinary.js";
-import fs from "fs"  
+import fs from "fs";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -174,7 +174,7 @@ const loginEmployee = async (req, res) => {
     }
 
     user.refreshToken = refreshToken;
-    user.isOnline = true
+    user.isOnline = true;
     await user.save();
     const loggedInUser = await Employee.findById(user._id).select(
       "-password -refreshToken"
@@ -243,7 +243,7 @@ const logoutEmployee = async (req, res) => {
         $set: {
           "availability.$.availableTo": formattedLoginTimestamp,
           // "availability.$.isAvailable": false,
-          isOnline: false
+          isOnline: false,
         },
       },
       { new: true }
@@ -767,9 +767,11 @@ const uploadImage = async (req, res) => {
     return res.status(400).json({ error: "No file uploaded" });
   }
   console.log("Uploading image =>", req.file);
-  
+
   if (!fs.existsSync(req.file.path)) {
-    return res.status(400).json({ error: "File does not exist at the specified path" });
+    return res
+      .status(400)
+      .json({ error: "File does not exist at the specified path" });
   }
   try {
     console.log("Image Path =>", req.file.path);
@@ -782,25 +784,29 @@ const uploadImage = async (req, res) => {
     }
   } catch (error) {
     console.error("Error in image upload:", error);
-    res.status(500).json({ error: "Failed to upload image", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Failed to upload image", details: error.message });
   }
 };
 const updateEmployee = async (req, res) => {
-  const {profile}= req.body;
+  const { profile } = req.body;
   try {
     const employee = await Employee.findByIdAndUpdate(
       req.user?._id,
-      { $set: {
-        name:profile.firstName,
-        email:profile.email,
-        phoneNo:profile.phone,
-        address:profile.address,
-        gender:profile.gender,
-        dob:profile.dateOfBirth,
-        twitter:profile.twitter,
-        linkedIn:profile.linkedIn,
-        profileImageUrl:profile.profileImageUrl,
-      } },
+      {
+        $set: {
+          name: profile.firstName,
+          email: profile.email,
+          phoneNo: profile.phone,
+          address: profile.address,
+          gender: profile.gender,
+          dob: profile.dateOfBirth,
+          twitter: profile.twitter,
+          linkedIn: profile.linkedIn,
+          profileImageUrl: profile.profileImageUrl,
+        },
+      },
       { new: true }
     ).select("-password -refreshToken");
     if (!employee) {
@@ -813,9 +819,34 @@ const updateEmployee = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in updating employee:", error);
-    res.status(500).json({ message: "Failed to update employee", details: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to update employee", details: error.message });
   }
-}
+};
+const changeOldPassword = async (req, res) => {
+  const { newPassword } = req.body;
+  if (!newPassword) {
+    return res
+      .status(400)
+      .json({ message: "New password is required", success: false });
+  }
+  try {
+    const password = await bcrypt.hash(newPassword, 10);
+    const employee = await Employee.findByIdAndUpdate(res.user?._id, {
+      $set: {
+        password,
+      },
+    });
+  } catch (error) {
+    console.error("Error in changing old password:", error);
+    res.status(500).json({
+      message: "Failed to change old password",
+      details: error.message,
+      success: false,
+    });
+  }
+};
 export {
   createEmployee,
   loginEmployee,
