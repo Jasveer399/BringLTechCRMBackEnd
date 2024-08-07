@@ -56,7 +56,60 @@ const getAllrole = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const addHolidays = async (req, res) => {
+  try {
+    const { holidays } = req.body;
 
+    if (!holidays || !Array.isArray(holidays)) {
+      return res.status(400).json({ message: "Holidays array is required" });
+    }
+
+    let config = await Config.findOne();
+    if (!config) {
+      config = new Config({ holidays: [], options: [] });
+    }
+
+    const newHolidays = holidays.map((date) => ({ date: new Date(date) }));
+
+    // Filter out existing holidays
+    const uniqueNewHolidays = newHolidays.filter(
+      (newHoliday) =>
+        !config.holidays.some(
+          (existingHoliday) =>
+            existingHoliday.date.toISOString().split("T")[0] ===
+            newHoliday.date.toISOString().split("T")[0]
+        )
+    );
+    config.holidays.push(...uniqueNewHolidays);
+    await config.save();
+
+    res.status(201).json({
+      message: "Holidays added successfully",
+      addedHolidays: uniqueNewHolidays,
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error in addHolidays:", error);
+    res
+      .status(500)
+      .json({ message: "Internal server error", success: false, error: error });
+  }
+};
+
+const getHolidays = async (req, res) => {
+  try {
+    const config = await Config.findOne();
+    if (!config) {
+      return res.status(404).json({ message: "Holidays not found" });
+    }
+    res.status(200).json(config.holidays);
+  } catch (error) {
+    console.error("Error in getHolidays:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export { employeeRole, getAllrole, addHolidays, getHolidays };
 const deleteRole = async (req, res) => {
   const { role } = req.body;
 
