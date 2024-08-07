@@ -167,6 +167,53 @@ const editRole = async (req, res) => {
   }
 };
 
+const deleteHoliday = async (req, res) => {
+  try {
+    const { date } = req.body;
+    console.log("Date to delete:", date);
+
+    if (!date) {
+      return res.status(400).json({ message: "Date is required", success: false });
+    }
+
+    const holidayDate = new Date(date);
+
+    if (isNaN(holidayDate.getTime())) {
+      return res.status(400).json({ message: "Invalid date format", success: false });
+    }
+
+    const config = await Config.findOne();
+    if (!config) {
+      return res.status(404).json({ message: "No configuration found", success: false });
+    }
+
+    const initialLength = config.holidays.length;
+    
+    config.holidays = config.holidays.filter(
+      (holiday) => holiday.date.toISOString().split('T')[0] !== holidayDate.toISOString().split('T')[0]
+    );
+
+    if (config.holidays.length === initialLength) {
+      return res.status(404).json({ message: "Holiday not found", success: false });
+    }
+
+    await config.save();
+
+    return res.status(200).json({
+      data: config.holidays,
+      message: "Holiday deleted successfully!",
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error while deleting Holiday:", error);
+    return res.status(500).json({
+      message: "Error while deleting Holiday",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
 export {
   employeeRole,
   getAllrole,
@@ -174,4 +221,5 @@ export {
   editRole,
   addHolidays,
   getHolidays,
+  deleteHoliday,
 };
