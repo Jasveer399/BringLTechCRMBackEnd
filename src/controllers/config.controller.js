@@ -45,12 +45,10 @@ const getAllrole = async (req, res) => {
     if (!config) {
       return res.status(404).json({ message: "No roles found" });
     }
-    res
-      .status(200)
-      .json({ 
-        allRoles: config.options.map((option) => option.value),
-        data: config.options
-      });
+    res.status(200).json({
+      allRoles: config.options.map((option) => option.value),
+      data: config.options,
+    });
   } catch (error) {
     console.error("Error in getAllRoles:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -108,8 +106,6 @@ const getHolidays = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-export { employeeRole, getAllrole, addHolidays, getHolidays };
 const deleteRole = async (req, res) => {
   const { role } = req.body;
 
@@ -121,16 +117,18 @@ const deleteRole = async (req, res) => {
         .json({ message: "No roles found", success: false });
     }
 
-    const filteredRoles = config.options.filter((option) => option.value !== role)
+    const filteredRoles = config.options.filter(
+      (option) => option.value !== role
+    );
 
-    config.options = filteredRoles
-    await config.save()
+    config.options = filteredRoles;
+    await config.save();
 
     return res.status(200).json({
-        data: config.options,
-        message: "Role deleted successfully !!",
-        success: true,
-      });
+      data: config.options,
+      message: "Role deleted successfully !!",
+      success: true,
+    });
   } catch (error) {
     return res.status(500).json({
       message: "Error while deleting role",
@@ -139,8 +137,8 @@ const deleteRole = async (req, res) => {
   }
 };
 
-const editRole = async(req, res) => {
-  const { role, editRole } = req.body
+const editRole = async (req, res) => {
+  const { role, editRole } = req.body;
 
   try {
     const config = await Config.findOne();
@@ -149,12 +147,12 @@ const editRole = async(req, res) => {
         .status(404)
         .json({ message: "No roles found", success: false });
     }
-    const filteredRoles = config.options.filter((option) => 
-      option._id == role._id ? option.value = editRole : option
-    )
+    const filteredRoles = config.options.filter((option) =>
+      option._id == role._id ? (option.value = editRole) : option
+    );
 
-    config.options = filteredRoles
-    await config.save()
+    config.options = filteredRoles;
+    await config.save();
 
     return res.status(200).json({
       data: filteredRoles,
@@ -167,6 +165,13 @@ const editRole = async(req, res) => {
       success: false,
     });
   }
-}
+};
 
-export { employeeRole, getAllrole, deleteRole, editRole };
+export {
+  employeeRole,
+  getAllrole,
+  deleteRole,
+  editRole,
+  addHolidays,
+  getHolidays,
+};
