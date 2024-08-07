@@ -1,5 +1,7 @@
 import { Config } from "./../model/config.model.js";
+
 const employeeRole = async (req, res) => {
+  console.log(req.body);
   try {
     const { roles } = req.body;
 
@@ -28,6 +30,7 @@ const employeeRole = async (req, res) => {
     res.status(200).json({
       message: "Roles updated successfully",
       addedRoles: newRoles,
+      success: true,
       allRoles: config.options.map((option) => option.value),
     });
   } catch (error) {
@@ -44,11 +47,73 @@ const getAllrole = async (req, res) => {
     }
     res
       .status(200)
-      .json({ allRoles: config.options.map((option) => option.value) });
+      .json({ 
+        allRoles: config.options.map((option) => option.value),
+        data: config.options
+      });
   } catch (error) {
     console.error("Error in getAllRoles:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export { employeeRole,getAllrole };
+const deleteRole = async (req, res) => {
+  const { role } = req.body;
+
+  try {
+    const config = await Config.findOne();
+    if (!config) {
+      return res
+        .status(404)
+        .json({ message: "No roles found", success: false });
+    }
+
+    const filteredRoles = config.options.filter((option) => option.value !== role)
+
+    config.options = filteredRoles
+    await config.save()
+
+    return res.status(200).json({
+        data: config.options,
+        message: "Role deleted successfully !!",
+        success: true,
+      });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while deleting role",
+      success: false,
+    });
+  }
+};
+
+const editRole = async(req, res) => {
+  const { role, editRole } = req.body
+
+  try {
+    const config = await Config.findOne();
+    if (!config) {
+      return res
+        .status(404)
+        .json({ message: "No roles found", success: false });
+    }
+    const filteredRoles = config.options.filter((option) => 
+      option._id == role._id ? option.value = editRole : option
+    )
+
+    config.options = filteredRoles
+    await config.save()
+
+    return res.status(200).json({
+      data: filteredRoles,
+      message: "Role Edited Successfully !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while editing role",
+      success: false,
+    });
+  }
+}
+
+export { employeeRole, getAllrole, deleteRole, editRole };
