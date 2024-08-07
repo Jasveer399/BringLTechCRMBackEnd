@@ -445,6 +445,24 @@ const getAllEmployee = async (req, res) => {
 
     const allEmployees = await Employee.aggregate(pipeline);
 
+    const employeePositions = await Employee.aggregate([
+      {
+        $group: {
+          _id: "$position",
+          value: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          name: "$_id",
+          value: 1
+        }
+      }
+    ])
+
+    console.log("employee Positions: ", employeePositions)
+
     if (!allEmployees || allEmployees.length === 0) {
       return res.status(404).json({
         message: "No employees found",
@@ -461,6 +479,7 @@ const getAllEmployee = async (req, res) => {
     return res.status(200).json({
       message: "All Employees fetched with login counts!",
       data: sanitizedEmployees,
+      positionsSummary: employeePositions,
       count: sanitizedEmployees.length,
       success: true,
     });
