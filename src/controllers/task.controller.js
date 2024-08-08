@@ -3,8 +3,16 @@ import { Task } from "../model/task.model.js";
 import mongoose from "mongoose";
 
 const createTask = async (req, res) => {
-  const { title, description, link, timeFrom, timeTo, employeeId, date ,isDailyTask} =
-    req.body;
+  const {
+    title,
+    description,
+    link,
+    timeFrom,
+    timeTo,
+    employeeId,
+    date,
+    isDailyTask,
+  } = req.body;
   if (!title && !description && !timeFrom && !timeTo && !date) {
     return res.status(400).json({
       messaage: "all fields are required",
@@ -96,10 +104,13 @@ const getAllTasks = async (req, res) => {
           modifytasklink: 1,
           modifytimeExceeded: 1,
           priorityTask: 1,
+          isDailyTask: 1,
+          rating: 1,
           assignedTo: {
             _id: "$assignedEmployee._id",
             name: "$assignedEmployee.name",
             email: "$assignedEmployee.email",
+            position:"assignedEmployee.position"
           },
         },
       },
@@ -383,13 +394,14 @@ const updateTaskHandler = async (req, res) => {
   }
 };
 const taskAdminVerificationHandler = async (req, res) => {
-  const { _id } = req.body;
+  const { _id, rating } = req.body;
 
   const verifiedTask = await Task.findByIdAndUpdate(
     _id,
     {
       $set: {
         isVerify: true,
+        rating: rating,
       },
     },
     { new: true }
@@ -444,16 +456,14 @@ const setPriorityTask = async (req, res) => {
       message: "Task priority updated successfully",
       task,
       success: true,
-      priority:task.priorityTask,
+      priority: task.priorityTask,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error setting task priority",
-        error: error.message,
-        success: false,
-      });
+    res.status(500).json({
+      message: "Error setting task priority",
+      error: error.message,
+      success: false,
+    });
   }
 };
 async function createAndAssignDailyTasks() {
@@ -468,8 +478,8 @@ async function createAndAssignDailyTasks() {
       // Find all of yesterday's tasks for this employee
       const yesterdayTasks = await Task.find({
         assignedTo: employee._id,
-        date: yesterday.toISOString().split('T')[0],
-        dailyTask: true
+        date: yesterday.toISOString().split("T")[0],
+        dailyTask: true,
       });
 
       if (yesterdayTasks.length > 0) {
@@ -483,19 +493,21 @@ async function createAndAssignDailyTasks() {
             timeTo: yesterdayTask.timeTo,
             createdBy: yesterdayTask.createdBy,
             assignedTo: employee._id,
-            tasktype: 'new',
+            tasktype: "new",
             dailyTask: true,
-            date: today.toISOString().split('T')[0],
-            priorityTask: yesterdayTask.priorityTask
+            date: today.toISOString().split("T")[0],
+            priorityTask: yesterdayTask.priorityTask,
           });
 
           await newTask.save();
-          console.log(`Daily task "${newTask.title}" created and assigned to ${employee.name}`);
+          console.log(
+            `Daily task "${newTask.title}" created and assigned to ${employee.name}`
+          );
         }
       }
     }
   } catch (error) {
-    console.error('Error in creating and assigning daily tasks:', error);
+    console.error("Error in creating and assigning daily tasks:", error);
   }
 }
 export {

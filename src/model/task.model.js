@@ -124,6 +124,12 @@ const taskSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    rating:{
+      type: Number,
+      min: 1,
+      max: 5,
+      default: 0,
+    }
   },
   {
     timestamps: true,
