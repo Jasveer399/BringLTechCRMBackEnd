@@ -3,7 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./db/dbconnect.js";
 import cookieParser from "cookie-parser";
-
+import cron from "node-cron";
+import { createAndAssignDailyTasks } from "./controllers/task.controller.js";
 dotenv.config();
 const app = express();
 app.use(express.json());
@@ -22,12 +23,17 @@ app.use(
 );
 
 connectDB();
+cron.schedule('1 0 * * *', () => {
+  console.log('Running daily task assignment job');
+  createAndAssignDailyTasks();
+});
 
 import adminrouter from "./routes/admin.route.js";
 import employeeRouter from "./routes/employee.route.js";
 import taskRouter from "./routes/task.route.js";
 import projectRouter from "./routes/project.route.js";
 import configRouter from "./routes/config.route.js";
+
 
 app.use("/admin", adminrouter);
 app.use("/employee", employeeRouter);

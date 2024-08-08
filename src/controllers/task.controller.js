@@ -3,7 +3,7 @@ import { Task } from "../model/task.model.js";
 import mongoose from "mongoose";
 
 const createTask = async (req, res) => {
-  const { title, description, link, timeFrom, timeTo, employeeId, date } =
+  const { title, description, link, timeFrom, timeTo, employeeId, date ,isDailyTask} =
     req.body;
   if (!title && !description && !timeFrom && !timeTo && !date) {
     return res.status(400).json({
@@ -23,6 +23,7 @@ const createTask = async (req, res) => {
       createdBy: req.role,
       assignedTo: employeeId,
       tasktype: "new",
+      isDailyTask,
     });
 
     if (!createdTask) {
@@ -455,6 +456,48 @@ const setPriorityTask = async (req, res) => {
       });
   }
 };
+async function createAndAssignDailyTasks() {
+  try {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const employees = await Employee.find();
+
+    for (const employee of employees) {
+      // Find all of yesterday's tasks for this employee
+      const yesterdayTasks = await Task.find({
+        assignedTo: employee._id,
+        date: yesterday.toISOString().split('T')[0],
+        dailyTask: true
+      });
+
+      if (yesterdayTasks.length > 0) {
+        // Create new tasks based on yesterday's tasks
+        for (const yesterdayTask of yesterdayTasks) {
+          const newTask = new Task({
+            title: yesterdayTask.title,
+            description: yesterdayTask.description,
+            link: yesterdayTask.link,
+            timeFrom: yesterdayTask.timeFrom,
+            timeTo: yesterdayTask.timeTo,
+            createdBy: yesterdayTask.createdBy,
+            assignedTo: employee._id,
+            tasktype: 'new',
+            dailyTask: true,
+            date: today.toISOString().split('T')[0],
+            priorityTask: yesterdayTask.priorityTask
+          });
+
+          await newTask.save();
+          console.log(`Daily task "${newTask.title}" created and assigned to ${employee.name}`);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error in creating and assigning daily tasks:', error);
+  }
+}
 export {
   createTask,
   getAllTasks,
@@ -466,4 +509,5 @@ export {
   taskAdminVerificationHandler,
   getTodayTasks,
   setPriorityTask,
+  createAndAssignDailyTasks,
 };

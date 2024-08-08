@@ -13,8 +13,8 @@ const taskSchema = new Schema(
     link: {
       type: String,
     },
-    taskcompleteLink:{
-        type: String,
+    taskcompleteLink: {
+      type: String,
     },
     timeFrom: {
       type: String,
@@ -28,7 +28,7 @@ const taskSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    completiontime:{
+    completiontime: {
       type: String,
     },
     isVerify: {
@@ -43,11 +43,11 @@ const taskSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Employee",
     },
-    timeExceeded:{
+    timeExceeded: {
       type: Boolean,
-      default: false
+      default: false,
     },
-///////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
     isModify: {
       type: Boolean,
       default: false,
@@ -64,17 +64,17 @@ const taskSchema = new Schema(
     newModifyLink: {
       type: String,
     },
-    modifytimeExceeded:{
+    modifytimeExceeded: {
       type: Boolean,
-      default: false
+      default: false,
     },
-    modifycompletiontime:{
+    modifycompletiontime: {
       type: String,
     },
-    modifytasklink:{
+    modifytasklink: {
       type: String,
     },
-///////////////////////////////////////////////////////////////    
+    ///////////////////////////////////////////////////////////////
     isUpdated: {
       type: Boolean,
       default: false,
@@ -91,35 +91,39 @@ const taskSchema = new Schema(
     newUpdateLink: {
       type: String,
     },
-    date:{
+    date: {
       type: String,
     },
-    newModifyDate:{
+    newModifyDate: {
       type: String,
     },
-    newUpdateDate:{
+    newUpdateDate: {
       type: String,
     },
-    updatedtimeExceeded:{
-      type: Boolean,
-      default: false
-    },
-    updatedcompletiontime:{
-      type: String,
-    },
-    updatedtasklink:{
-      type: String,
-    },
-    tasktype:{
-      type: String,
-      required: true,
-      enum: ["new", "modifyed", "updated",],
-      default: "new",
-    },
-    priorityTask:{
+    updatedtimeExceeded: {
       type: Boolean,
       default: false,
-    }
+    },
+    updatedcompletiontime: {
+      type: String,
+    },
+    updatedtasklink: {
+      type: String,
+    },
+    tasktype: {
+      type: String,
+      required: true,
+      enum: ["new", "modifyed", "updated"],
+      default: "new",
+    },
+    priorityTask: {
+      type: Boolean,
+      default: false,
+    },
+    isDailyTask: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
