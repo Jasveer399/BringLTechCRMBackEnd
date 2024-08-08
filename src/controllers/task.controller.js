@@ -510,6 +510,40 @@ async function createAndAssignDailyTasks() {
     console.error("Error in creating and assigning daily tasks:", error);
   }
 }
+
+const toggleDailyTask = async(req, res) => {
+  const { dailyTask, _id } = req.body
+
+  try {
+    const toggledTask = await Task.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          isDailyTask: dailyTask
+        }
+      },
+      { new: true }
+    )
+
+    if (!toggledTask) {
+      return res.status(500).json({
+        message: "No task found !!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      data: toggledTask,
+      message: "Toggled Daily Task Successfully !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while toggling daily task !!",
+      success: false,
+    });
+  }
+}
 export {
   createTask,
   getAllTasks,
@@ -522,4 +556,5 @@ export {
   getTodayTasks,
   setPriorityTask,
   createAndAssignDailyTasks,
+  toggleDailyTask
 };

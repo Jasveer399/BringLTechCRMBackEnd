@@ -8,6 +8,7 @@ import {
   taskAdminVerificationHandler,
   taskDelete,
   taskVerifyHandler,
+  toggleDailyTask,
   updateTaskHandler,
 } from "../controllers/task.controller.js";
 import { Router } from "express";
@@ -33,4 +34,5 @@ router.patch(
 );
 router.post("/gettodaytask", verifyJWT(["admin"]), getTodayTasks);
 router.post("/setPriorityTask", verifyJWT(["admin"]), setPriorityTask)
+router.post("/toggleDailyTask", verifyJWT(["admin"]), toggleDailyTask)
 export default router;
