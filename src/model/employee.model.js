@@ -37,7 +37,7 @@ const employeeSchema = new Schema(
         },
         gender:{
             type: String,
-            enum: ['Male', 'Female', 'Other'],
+            // enum: ['Male', 'Female', 'Other'],
         },
         dob:{
             type: String,
@@ -72,6 +72,14 @@ const employeeSchema = new Schema(
         isOnline: {
             type: Boolean,
             default: false
+        },
+        monthlyRating: {
+            type: Number,
+            default: 0
+        },
+        maxMonthlyRating: {
+            type: Number,
+            default: 0
         },
     },
     {

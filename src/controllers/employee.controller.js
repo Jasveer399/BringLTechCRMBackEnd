@@ -902,6 +902,57 @@ const changeNewPassword = async (req, res) => {
     });
   }
 };
+
+const getEmployeeRatings = async (req, res) => {
+  try {
+    const employees = await Employee.find().select('name position monthlyRating maxMonthlyRating');
+
+    const getStatus = (score) => {
+      if (score >= 90) return "Excellent";
+      if (score >= 80) return "Very Good";
+      if (score >= 70) return "Good";
+      if (score >= 60) return "Satisfactory";
+      return "Poor";
+    };
+
+    const employeeRatings = employees.map(employee => {
+      const averageScore = employee.maxMonthlyRating > 0 
+        ? (employee.monthlyRating / employee.maxMonthlyRating) * 100 
+        : 0;
+      
+      const roundedScore = Math.round(averageScore);
+
+      return {
+        name: employee.name,
+        position: employee.position,
+        score: roundedScore,
+        status: getStatus(roundedScore)
+      };
+    });
+
+    // Sort employees by score in descending order
+    employeeRatings.sort((a, b) => b.score - a.score);
+
+    // Add rank to each employee
+    const rankedEmployeeRatings = employeeRatings.map((employee, index) => ({
+      rank: index + 1,
+      ...employee
+    }));
+
+    return res.status(200).json({
+      message: "Employee ratings fetched successfully",
+      data: rankedEmployeeRatings,
+      success: true
+    });
+  } catch (error) {
+    console.error("Error in getEmployeeRatings:", error);
+    return res.status(500).json({
+      error: error.message,
+      message: "Error while fetching employee ratings",
+      success: false
+    });
+  }
+};
 export {
   createEmployee,
   loginEmployee,
@@ -915,4 +966,5 @@ export {
   uploadImage,
   updateEmployee,
   changeNewPassword,
+  getEmployeeRatings
 };

@@ -1,4 +1,5 @@
 import {
+  calculateRating,
   createTask,
   getAllTasks,
   getSpecificEmployeeTask,
@@ -35,4 +36,5 @@ router.patch(
 router.post("/gettodaytask", verifyJWT(["admin"]), getTodayTasks);
 router.post("/setPriorityTask", verifyJWT(["admin"]), setPriorityTask)
 router.post("/toggleDailyTask", verifyJWT(["admin"]), toggleDailyTask)
+router.get("/calculateRating", calculateRating)
 export default router;

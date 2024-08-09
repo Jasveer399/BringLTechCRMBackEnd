@@ -47,6 +47,7 @@ const createTask = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
+      error: error,
       messaage: "Error while creating task",
       success: false,
     });
@@ -110,7 +111,7 @@ const getAllTasks = async (req, res) => {
             _id: "$assignedEmployee._id",
             name: "$assignedEmployee.name",
             email: "$assignedEmployee.email",
-            position:"assignedEmployee.position"
+            position: "assignedEmployee.position",
           },
         },
       },
@@ -395,6 +396,7 @@ const updateTaskHandler = async (req, res) => {
 };
 const taskAdminVerificationHandler = async (req, res) => {
   const { _id, rating } = req.body;
+  const today = new Date().toISOString().split("T")[0];
 
   const verifiedTask = await Task.findByIdAndUpdate(
     _id,
@@ -402,6 +404,7 @@ const taskAdminVerificationHandler = async (req, res) => {
       $set: {
         isVerify: true,
         rating: rating,
+        verificationDate: today,
       },
     },
     { new: true }
@@ -511,19 +514,74 @@ async function createAndAssignDailyTasks() {
   }
 }
 
-const toggleDailyTask = async(req, res) => {
-  const { dailyTask, _id } = req.body
+const calculateRating = async (req, res) => {
+  try {
+    const today = new Date().toISOString().split("T")[0];
+    const employees = await Employee.find();
+    let rating
+
+    for (const employee of employees) {
+      rating = 0
+      console.log("employee: ", employee)
+      console.log(employee.monthlyRating)
+      const todayTasks = await Task.find({
+        assignedTo: employee._id,
+        isVerify: true,
+        verificationDate: today,
+      });
+      console.log("todayTasks:", todayTasks.length)
+
+      if (todayTasks.length > 0) {
+        const totalRating = todayTasks.reduce((sum, task) => sum + (task.rating || 0), 0);
+        console.log("Total rating:", totalRating); 
+
+        const maxPossibleRating = todayTasks.length * 5;
+        console.log("Max possible rating:", maxPossibleRating);
+
+        const dailyRatingPercentage = (totalRating / maxPossibleRating) * 100;
+        console.log("Daily rating percentage:", dailyRatingPercentage);
+
+        // Ensure the monthly rating is a number before adding
+        const currentMonthlyRating = isNaN(employee.monthlyRating) ? 0 : employee.monthlyRating;
+        
+        // Add the daily rating to the monthly rating
+        employee.monthlyRating = currentMonthlyRating + dailyRatingPercentage;
+        employee.maxMonthlyRating += 100
+        
+        console.log("New monthly rating:", employee.monthlyRating);
+      } else {
+        console.log("No tasks for today, monthly rating unchanged");
+      }
+
+      await employee.save();
+    }
+
+    return res.status(200).json({
+      message: "Monthly rating calculated !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error,
+      message: "Error while calculating rating !!",
+      success: false,
+    });
+  }
+};
+
+const toggleDailyTask = async (req, res) => {
+  const { dailyTask, _id } = req.body;
 
   try {
     const toggledTask = await Task.findByIdAndUpdate(
       _id,
       {
         $set: {
-          isDailyTask: dailyTask
-        }
+          isDailyTask: dailyTask,
+        },
       },
       { new: true }
-    )
+    );
 
     if (!toggledTask) {
       return res.status(500).json({
@@ -543,7 +601,7 @@ const toggleDailyTask = async(req, res) => {
       success: false,
     });
   }
-}
+};
 export {
   createTask,
   getAllTasks,
@@ -556,5 +614,6 @@ export {
   getTodayTasks,
   setPriorityTask,
   createAndAssignDailyTasks,
-  toggleDailyTask
+  toggleDailyTask,
+  calculateRating,
 };
