@@ -23,6 +23,8 @@
     "nanoid": "^5.0.7",
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.14",
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5"
   }
 }
