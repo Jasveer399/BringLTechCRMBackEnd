@@ -915,18 +915,30 @@ const getEmployeeRatings = async (req, res) => {
       return "Poor";
     };
 
+    const statusCounts = {
+      Excellent: 0,
+      "Very Good": 0,
+      Good: 0,
+      Satisfactory: 0,
+      Poor: 0
+    };
+
     const employeeRatings = employees.map(employee => {
       const averageScore = employee.maxMonthlyRating > 0 
         ? (employee.monthlyRating / employee.maxMonthlyRating) * 100 
         : 0;
       
       const roundedScore = Math.round(averageScore);
+      const status = getStatus(roundedScore);
+      
+      // Increment the count for this status
+      statusCounts[status]++;
 
       return {
         name: employee.name,
         position: employee.position,
         score: roundedScore,
-        status: getStatus(roundedScore)
+        status: status
       };
     });
 
@@ -939,9 +951,18 @@ const getEmployeeRatings = async (req, res) => {
       ...employee
     }));
 
+    // Convert statusCounts to the format needed for the pie chart
+    const statusData = Object.entries(statusCounts).map(([name, value]) => ({
+      name,
+      value
+    }));
+
     return res.status(200).json({
       message: "Employee ratings fetched successfully",
-      data: rankedEmployeeRatings,
+      data: {
+        employeeRatings: rankedEmployeeRatings,
+        statusSummary: statusData
+      },
       success: true
     });
   } catch (error) {
