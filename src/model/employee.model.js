@@ -81,6 +81,15 @@ const employeeSchema = new Schema(
             type: Number,
             default: 0
         },
+        snaekBreak:{
+            type:String,
+        },
+        TeaBreak:{
+            type:String,
+        },
+        LunchBreak:{
+            type:String,
+        },
     },
     {
         timestamps: true
