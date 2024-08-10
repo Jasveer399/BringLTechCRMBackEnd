@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import connectDB from "./db/dbconnect.js";
 import cookieParser from "cookie-parser";
 import cron from "node-cron";
-import { createAndAssignDailyTasks } from "./controllers/task.controller.js";
+import { calculateRating, createAndAssignDailyTasks } from "./controllers/task.controller.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
@@ -36,11 +36,16 @@ app.use(
 
 connectDB();
 
-cron.schedule('1 0 * * *', () => {
+cron.schedule('26 18 * * *', () => {
   console.log('Running daily task assignment job');
   createAndAssignDailyTasks();
 });
 
+// cron.schedule('* * * * *', () => {
+//   console.log('Running daily rating update');
+//   calculateRating();
+// });
+// 0 22 * * *
 import adminrouter from "./routes/admin.route.js";
 import employeeRouter from "./routes/employee.route.js";
 import taskRouter from "./routes/task.route.js";

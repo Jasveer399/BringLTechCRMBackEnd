@@ -514,7 +514,7 @@ async function createAndAssignDailyTasks() {
   }
 }
 
-const calculateRating = async (req, res) => {
+const calculateRating = async () => {
   try {
     const today = new Date().toISOString().split("T")[0];
     const employees = await Employee.find();
@@ -556,16 +556,9 @@ const calculateRating = async (req, res) => {
       await employee.save();
     }
 
-    return res.status(200).json({
-      message: "Monthly rating calculated !!",
-      success: true,
-    });
+    console.log("Worked Correctly !! Rating calculated.....")
   } catch (error) {
-    return res.status(500).json({
-      error: error,
-      message: "Error while calculating rating !!",
-      success: false,
-    });
+    console.log("Error while Rating calculated.....")
   }
 };
 
