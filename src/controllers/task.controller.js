@@ -470,23 +470,27 @@ const setPriorityTask = async (req, res) => {
   }
 };
 async function createAndAssignDailyTasks() {
+
   try {
+    console.log("createAndAssignDailyTasks///////////////////")
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
+    console.log("yesterday::==",yesterday)
+    console.log("Today is today :=",today)
 
     const employees = await Employee.find();
 
     for (const employee of employees) {
-      // Find all of yesterday's tasks for this employee
       const yesterdayTasks = await Task.find({
         assignedTo: employee._id,
         date: yesterday.toISOString().split("T")[0],
-        dailyTask: true,
+        isDailyTask: true,
       });
 
+      console.log("yesterdayTasks:======",yesterdayTasks)
+
       if (yesterdayTasks.length > 0) {
-        // Create new tasks based on yesterday's tasks
         for (const yesterdayTask of yesterdayTasks) {
           const newTask = new Task({
             title: yesterdayTask.title,
@@ -497,7 +501,7 @@ async function createAndAssignDailyTasks() {
             createdBy: yesterdayTask.createdBy,
             assignedTo: employee._id,
             tasktype: "new",
-            dailyTask: true,
+            isDailyTask: true,
             date: today.toISOString().split("T")[0],
             priorityTask: yesterdayTask.priorityTask,
           });
