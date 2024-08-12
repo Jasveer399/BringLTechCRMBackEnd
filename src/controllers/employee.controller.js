@@ -974,6 +974,9 @@ const getEmployeeRatings = async (req, res) => {
     });
   }
 };
+
+
+
 export {
   createEmployee,
   loginEmployee,
@@ -987,5 +990,5 @@ export {
   uploadImage,
   updateEmployee,
   changeNewPassword,
-  getEmployeeRatings
+  getEmployeeRatings,
 };
