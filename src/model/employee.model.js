@@ -59,6 +59,9 @@ const employeeSchema = new Schema(
                     type: Boolean,
                     default: false
                 },
+                date: {
+                    type: String
+                },
                 owner: {
                     type: String,
                     required: true

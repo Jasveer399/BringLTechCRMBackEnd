@@ -37,7 +37,7 @@ router.post("/login", loginEmployee);
 router.post("/updatepassword", verifyJWT(["employee"]), updatePassword),
   router.get("/getAllEmployee", getAllEmployee);
 router.post("/logout", verifyJWT(["employee"]), logoutEmployee);
-router.get("/getCurrentEmployee", verifyJWT(["employee"]), getCurrentEmployee);
+router.get("/getCurrentEmployee", verifyJWT(["employee", "admin"]), getCurrentEmployee);
 router.post("/getSpecificEmployeeData",getSpecificEmployeeData);
 router.post('/upload-image', upload.single('image'),uploadImage);
 router.post("/updateEmployee", verifyJWT(["employee"]), updateEmployee)
