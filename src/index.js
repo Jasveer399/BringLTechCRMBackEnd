@@ -4,7 +4,10 @@ import dotenv from "dotenv";
 import connectDB from "./db/dbconnect.js";
 import cookieParser from "cookie-parser";
 import cron from "node-cron";
-import { calculateRating, createAndAssignDailyTasks } from "./controllers/task.controller.js";
+import {
+  calculateRating,
+  createAndAssignDailyTasks,
+} from "./controllers/task.controller.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
@@ -15,8 +18,8 @@ const io = new Server(httpServer, {
   cors: {
     origin: "http://localhost:5173",
     methods: ["GET", "POST"],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 
 app.use(express.json());
@@ -36,8 +39,8 @@ app.use(
 
 connectDB();
 
-cron.schedule('26 18 * * *', () => {
-  console.log('Running daily task assignment job');
+cron.schedule("26 18 * * *", () => {
+  console.log("Running daily task assignment job");
   createAndAssignDailyTasks();
 });
 
@@ -53,6 +56,7 @@ import projectRouter from "./routes/project.route.js";
 import configRouter from "./routes/config.route.js";
 import notificationRouter from "./routes/notification.route.js";
 import breakRouter from "./routes/break.route.js"
+import AnnouncementRouter from "./routes/announcement.routes.js";
 
 app.use("/admin", adminrouter);
 app.use("/employee", employeeRouter);
@@ -61,6 +65,7 @@ app.use("/project", projectRouter);
 app.use("/config", configRouter);
 app.use("/notification", notificationRouter);
 app.use("/break", breakRouter);
+app.use("/announcement", AnnouncementRouter);
 
 // Socket.IO connection handling
 io.on("connection", (socket) => {
@@ -70,6 +75,10 @@ io.on("connection", (socket) => {
     socket.join(userId);
     console.log(`User ${userId} joined their personal room`);
   });
+  socket.on('join', (employeeId) => {
+    socket.join(`employee_${employeeId}`);
+    console.log(`Employee ${employeeId} joined their room`);
+  });
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
@@ -77,7 +86,7 @@ io.on("connection", (socket) => {
 });
 
 // Make io accessible to our routes
-app.set('io', io);
+app.set("io", io);
 
 httpServer.listen(3000, () =>
   console.log("Server listening on http://localhost on port 3000")
