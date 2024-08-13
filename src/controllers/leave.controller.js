@@ -113,4 +113,58 @@ const fetchLeaveOfSpecificemployee = async (req, res) => {
   }
 };
 
-export { createLeave, fetchLeaveOfSpecificemployee };
+const getEmployeesOnLeaveToday = async (req, res) => {
+  try {
+    // Get today's date in the format dd-M-yyyy
+    const dateTime = formatDate(new Date());
+    const today = dateTime.split(",")[0]
+
+    const employeesOnLeave = await Leave.aggregate([
+      {
+        $match: {
+          date: today
+        }
+      },
+      {
+        $lookup: {
+          from: "employees", // Assuming your Employee collection name is "employees"
+          localField: "employeeId",
+          foreignField: "_id",
+          as: "employeeDetails"
+        }
+      },
+      {
+        $unwind: "$employeeDetails"
+      },
+      {
+        $project: {
+          _id: 1,
+          leaveType: 1,
+          reason: 1,
+          date: 1,
+          employeeName: "$employeeDetails.name",
+          employeeID: "$employeeDetails._id"
+        }
+      }
+    ]);
+
+    const count = employeesOnLeave.length;
+
+    return res.status(200).json({
+      success: true,
+      message: "Employees on leave today fetched successfully",
+      count: count,
+      data: employeesOnLeave
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      error: error,
+      message: "Error while counting employees on leave today",
+      success: false
+    });
+  }
+};
+
+
+export { createLeave, fetchLeaveOfSpecificemployee, getEmployeesOnLeaveToday };
