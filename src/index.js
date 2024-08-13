@@ -55,7 +55,9 @@ import taskRouter from "./routes/task.route.js";
 import projectRouter from "./routes/project.route.js";
 import configRouter from "./routes/config.route.js";
 import notificationRouter from "./routes/notification.route.js";
+import breakRouter from "./routes/break.route.js"
 import AnnouncementRouter from "./routes/announcement.routes.js";
+import leaveRouter from "./routes/leave.routes.js";
 
 app.use("/admin", adminrouter);
 app.use("/employee", employeeRouter);
@@ -63,7 +65,9 @@ app.use("/task", taskRouter);
 app.use("/project", projectRouter);
 app.use("/config", configRouter);
 app.use("/notification", notificationRouter);
+app.use("/break", breakRouter);
 app.use("/announcement", AnnouncementRouter);
+app.use("/leave", leaveRouter);
 
 // Socket.IO connection handling
 io.on("connection", (socket) => {

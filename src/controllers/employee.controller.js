@@ -560,11 +560,18 @@ const getCurrentEmployee = async (req, res) => {
   const d = new Date();
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
+  const { _id } = req.query
+  let id
+  if (_id) {
+    id = new mongoose.Types.ObjectId(_id)
+  } else {
+    id = req.user?._id
+  }
   try {
     const pipeline = [
       {
         $match: {
-          _id: req.user?._id,
+          _id: id,
         },
       },
       {
@@ -974,6 +981,9 @@ const getEmployeeRatings = async (req, res) => {
     });
   }
 };
+
+
+
 export {
   createEmployee,
   loginEmployee,
@@ -987,5 +997,5 @@ export {
   uploadImage,
   updateEmployee,
   changeNewPassword,
-  getEmployeeRatings
+  getEmployeeRatings,
 };
