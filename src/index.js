@@ -39,15 +39,15 @@ app.use(
 
 connectDB();
 
-cron.schedule("26 18 * * *", () => {
+cron.schedule("59 23 * * *", () => {
   console.log("Running daily task assignment job");
   createAndAssignDailyTasks();
 });
 
-// cron.schedule('* * * * *', () => {
-//   console.log('Running daily rating update');
-//   calculateRating();
-// });
+cron.schedule('59 23 * * *', () => {
+  console.log('Running daily rating update');
+  calculateRating();
+});
 // 0 22 * * *
 import adminrouter from "./routes/admin.route.js";
 import employeeRouter from "./routes/employee.route.js";

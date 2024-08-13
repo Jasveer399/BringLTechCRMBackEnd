@@ -15,7 +15,7 @@ const generateAccessAndRefreshToken = async (userid) => {
   }
 };
 const createAdmin = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password,adminType} = req.body;
 
   if (!username || !email || !password) {
     return res.status(400).json({ message: "All fields are required." });
@@ -35,6 +35,7 @@ const createAdmin = async (req, res) => {
       username,
       email,
       password,
+      adminType,
     });
 
     return res
@@ -86,18 +87,17 @@ const adminlogin = async (req, res) => {
     const loggedInUser = await Admin.findById(user._id).select(
       "-password -refreshToken"
     );
-
     const options = {
       httpOnly: true,
       secure: false,
     };
-
     return res
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", refreshToken, options)
       .json({
         data: loggedInUser,
+        adminType:loggedInUser.adminType,
         success: true,
         accessToken:accessToken,
         refreshToken: refreshToken,
