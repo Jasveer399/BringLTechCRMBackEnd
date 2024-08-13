@@ -27,7 +27,7 @@ const createAdmin = async (req, res) => {
     if (exitadmin) {
       return res.status(400).json({
         status: 400,
-        message: "Username or Email already exists",
+        message: "Email already exists",
         success: false,
       });
     }
