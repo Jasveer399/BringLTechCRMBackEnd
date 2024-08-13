@@ -18,6 +18,11 @@ const adminSchema = new Schema(
       type: String,
       required: true,
     },
+    adminType:{
+      type: String,
+      enum: ['Admin', 'Manager', 'Hr'],
+      required: true,
+    },
     accessToken: { type: String },
     refreshToken: { type: String },
   },
