@@ -14,26 +14,21 @@ const announcementSchema = new mongoose.Schema(
       trim: true,
     },
     sender: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Admin",
-      required: true,
+      name: String,
+      email: String,
     },
     category: {
       type: String,
-      enum: [
-        "General",
-        "Policy Update",
-        "Event",
-        "Holiday",
-        "Emergency",
-        "Other",
-      ],
+      enum: ["General", "Event", "Emergency"],
       default: "General",
     },
     priority: {
       type: String,
       enum: ["Low", "Medium", "High", "Urgent"],
       default: "Medium",
+    },
+    imageUrl: {
+      type: String,
     },
     expiryDate: {
       type: Date,

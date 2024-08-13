@@ -14,8 +14,11 @@ import {
   getAllAnnouncements,
 } from "../controllers/announcement.controller.js";
 const router = Router();
-
-router.post("/send", verifyJWT(["admin"]), createAnnouncement);
+router.post(
+  "/send",
+  verifyJWT(["admin"]),
+  createAnnouncement
+);
 router.post(
   "/getallannouncement",
   verifyJWT(["admin", "employee"]),

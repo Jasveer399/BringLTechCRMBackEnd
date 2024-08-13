@@ -1,21 +1,34 @@
-import {Announcement} from "../model/announcement.model.js";
+import { Admin } from "../model/admin.model.js";
+import { Announcement } from "../model/announcement.model.js";
 import { Employee } from "../model/employee.model.js";
 
 // Create a new announcement
 const createAnnouncement = async (req, res) => {
   try {
-    const { title, content, category, priority, expiryDate } = req.body;
-    const sender = req.user._id;
+    const { title, content, category, priority, expiryDate, imageUrl } =
+      req.body;
+    const sender = req.user;
+    if (!sender) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (!title || !content || !category || !priority || !expiryDate) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    const senderdata = await Admin.findById(sender._id);
 
-    console.log("Announcement Body :=",req.body)
+    console.log("senderdata :=", senderdata);
 
     const newAnnouncement = new Announcement({
       title,
       content,
-      sender,
       category,
+      sender: {
+        name: senderdata.username,
+        email: senderdata.email,
+      },
       priority,
       expiryDate,
+      imageUrl,
     });
 
     await newAnnouncement.save();
