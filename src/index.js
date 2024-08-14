@@ -16,7 +16,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://bringltechcrmbackend.onrender.com",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -25,7 +25,10 @@ const io = new Server(httpServer, {
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:5173", // Your React app's URL
+    origin: [
+      "http://localhost:5173",
+      "https://bringltechcrmbackend.onrender.com",
+    ], // Your React app's URL
     credentials: true,
   })
 );
@@ -44,8 +47,8 @@ cron.schedule("59 23 * * *", () => {
   createAndAssignDailyTasks();
 });
 
-cron.schedule('59 23 * * *', () => {
-  console.log('Running daily rating update');
+cron.schedule("59 23 * * *", () => {
+  console.log("Running daily rating update");
   calculateRating();
 });
 // 0 22 * * *
@@ -55,7 +58,7 @@ import taskRouter from "./routes/task.route.js";
 import projectRouter from "./routes/project.route.js";
 import configRouter from "./routes/config.route.js";
 import notificationRouter from "./routes/notification.route.js";
-import breakRouter from "./routes/break.route.js"
+import breakRouter from "./routes/break.route.js";
 import AnnouncementRouter from "./routes/announcement.routes.js";
 import leaveRouter from "./routes/leave.routes.js";
 
@@ -77,7 +80,7 @@ io.on("connection", (socket) => {
     socket.join(userId);
     console.log(`User ${userId} joined their personal room`);
   });
-  socket.on('join', (employeeId) => {
+  socket.on("join", (employeeId) => {
     socket.join(`employee_${employeeId}`);
     console.log(`Employee ${employeeId} joined their room`);
   });
