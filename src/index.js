@@ -16,7 +16,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://bringltechcrmbackend.onrender.com",
+    origin: "https://bringletech-crm-frontend.vercel.app",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -27,7 +27,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://bringltechcrmbackend.onrender.com",
+      "https://bringletech-crm-frontend.vercel.app",
     ], // Your React app's URL
     credentials: true,
   })

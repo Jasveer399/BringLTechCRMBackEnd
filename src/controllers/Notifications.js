@@ -38,7 +38,7 @@ const addNotification = async (req, res) => {
     recipient: recipientId,
     recipientModel,
   });
-
+  
   try {
     const newNotification = await notification.save();
     // Emit the new notification to the recipient's room
