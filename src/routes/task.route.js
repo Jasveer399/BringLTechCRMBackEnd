@@ -1,6 +1,7 @@
 import {
   calculateRating,
   createTask,
+  editTaskHandler,
   getAllTasks,
   getSpecificEmployeeTask,
   getTodayTasks,
@@ -26,6 +27,7 @@ router.post(
 );
 router.post("/verifytask", verifyJWT(["employee"]), taskVerifyHandler);
 router.post("/deleteTask", verifyJWT(["admin", "employee"]), taskDelete);
+router.patch("/editTask", verifyJWT(["admin"]), editTaskHandler);
 router.patch("/modifytask", verifyJWT(["admin"]), modifyTaskHandler);
 router.patch("/updatetask", verifyJWT(["admin"]), updateTaskHandler);
 router.patch(

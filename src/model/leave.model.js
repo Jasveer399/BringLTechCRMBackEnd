@@ -9,7 +9,7 @@ const leaveSchema = new Schema(
     },
     leaveType: {
       type: String,
-      enum: ["Medical Leave", "Personal Leave", "Half Day", "Others"],
+      enum: ["Absent", "Medical Leave", "Half-Day"],
       required: true,
     },
     reason: {
