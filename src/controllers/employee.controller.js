@@ -6,6 +6,8 @@ import { uploadFileonCloudinary } from "../utils/cloudinary.js";
 import fs from "fs";
 import bcrypt from "bcrypt";
 import { Task } from "../model/task.model.js";
+import { Break } from "../model/break.model.js";
+import { Leave } from "../model/leave.model.js";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -1011,6 +1013,10 @@ const deleteEmployee = async (req, res) => {
 
     const deletedTasks = await Task.deleteMany({ assignedTo: new mongoose.Types.ObjectId(_id) })
 
+    const deletedBreaksRecord = await Break.deleteMany({ employeeId: new mongoose.Types.ObjectId(_id) })
+
+    const deletedLeavesRecord = await Leave.deleteMany({ employeeId: new mongoose.Types.ObjectId(_id) })
+
     if (!deletedEmployee) {
       return res.status(500).json({
         message: "Employee Not Found !!",
@@ -1021,6 +1027,8 @@ const deleteEmployee = async (req, res) => {
     return res.status(200).json({
       data: deleteEmployee,
       tasks: deletedTasks,
+      breaks: deletedBreaksRecord,
+      leaves: deletedLeavesRecord,
       message: "Employee Deleted Successfully !!",
       success: true,
     });
