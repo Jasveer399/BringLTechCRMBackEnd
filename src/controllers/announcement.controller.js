@@ -98,12 +98,12 @@ const getAnnouncement = async (req, res) => {
 };
 
 // Update an announcement
-const updateAnnouncement = async (req, res) => {
+const EditAnnouncement = async (req, res) => {
   try {
-    const { title, content, category, priority, expiryDate, isActive } =
+    const { title, content, category, priority, expiryDate, imageUrl } =
       req.body;
-
-    let announcement = await Announcement.findById(req.params.id);
+    console.log(req.body)
+    let announcement = await Announcement.findById(req.body._id);
 
     if (!announcement) {
       return res.status(404).json({
@@ -117,19 +117,18 @@ const updateAnnouncement = async (req, res) => {
     announcement.category = category || announcement.category;
     announcement.priority = priority || announcement.priority;
     announcement.expiryDate = expiryDate || announcement.expiryDate;
-    announcement.isActive =
-      isActive !== undefined ? isActive : announcement.isActive;
+    announcement.imageUrl = imageUrl || announcement.imageUrl;
     announcement.updatedAt = Date.now();
 
     await announcement.save();
 
-    res.status(200).json({
+     return res.status(200).json({
       success: true,
       data: announcement,
       message: "Announcement updated successfully",
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       message: error.message,
     });
@@ -139,7 +138,7 @@ const updateAnnouncement = async (req, res) => {
 // Delete an announcement
 const deleteAnnouncement = async (req, res) => {
   try {
-    const announcement = await Announcement.findById(req.params.id);
+    const announcement = await Announcement.findByIdAndDelete(req.body._id);
 
     if (!announcement) {
       return res.status(404).json({
@@ -147,18 +146,16 @@ const deleteAnnouncement = async (req, res) => {
         message: "Announcement not found",
       });
     }
-
-    await announcement.remove();
-
-    res.status(200).json({
+   return res.status(200).json({
       success: true,
       data: {},
       message: "Announcement deleted successfully",
     });
   } catch (error) {
-    res.status(500).json({
+   return res.status(500).json({
       success: false,
       message: "Server Error",
+      error:error.message,
     });
   }
 };
@@ -231,61 +228,13 @@ const sendAnnouncementToEmployees = async (req, res) => {
   }
 };
 
-// Get announcements statistics
-const getAnnouncementStats = async (req, res) => {
-  try {
-    const stats = await Announcement.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalAnnouncements: { $sum: 1 },
-          activeAnnouncements: {
-            $sum: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] },
-          },
-          categoryCounts: {
-            $push: {
-              k: "$category",
-              v: 1,
-            },
-          },
-          priorityCounts: {
-            $push: {
-              k: "$priority",
-              v: 1,
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          totalAnnouncements: 1,
-          activeAnnouncements: 1,
-          categoryBreakdown: { $arrayToObject: "$categoryCounts" },
-          priorityBreakdown: { $arrayToObject: "$priorityCounts" },
-        },
-      },
-    ]);
-
-    res.status(200).json({
-      success: true,
-      data: stats[0],
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server Error",
-    });
-  }
-};
 
 export {
   createAnnouncement,
   getAllAnnouncements,
   getAnnouncement,
-  getAnnouncementStats,
   getFilteredAnnouncements,
   sendAnnouncementToEmployees,
   deleteAnnouncement,
-  updateAnnouncement,
+  EditAnnouncement,
 };
