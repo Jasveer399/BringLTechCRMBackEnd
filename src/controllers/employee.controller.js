@@ -155,25 +155,39 @@ const loginEmployee = async (req, res) => {
     const now = new Date();
     const formattedLoginTimestamp = formatDate(now);
     const today = now;
-    const todayAvailabilityIndex = user.availability.findIndex((entry) => {
-      const entryDate = parseCustomDate(entry.availableFrom);
-      return (
-        entryDate.getDate() === today.getDate() &&
-        entryDate.getMonth() === today.getMonth() &&
-        entryDate.getFullYear() === today.getFullYear()
-      );
-    });
 
-    if (todayAvailabilityIndex !== -1) {
-      user.availability[todayAvailabilityIndex].isAvailable = true;
+    if (user.availability && Array.isArray(user.availability)) {
+      const todayAvailabilityIndex = user.availability.findIndex((entry) => {
+        if (entry && entry.availableFrom) {
+          console.log("Entry availableFrom:", entry.availableFrom); // Debug log
+          const entryDate = parseCustomDate(entry.availableFrom);
+          return (
+            entryDate.getDate() === today.getDate() &&
+            entryDate.getMonth() === today.getMonth() &&
+            entryDate.getFullYear() === today.getFullYear()
+          );
+        }
+        return false;
+      });
+
+      if (todayAvailabilityIndex !== -1) {
+        user.availability[todayAvailabilityIndex].isAvailable = true;
+      } else {
+        const newAvailability = {
+          availableFrom: formattedLoginTimestamp,
+          owner: "Employee",
+          isAvailable: true,
+        };
+        user.availability.push(newAvailability);
+      }
     } else {
-      const newAvailability = {
+      user.availability = [{
         availableFrom: formattedLoginTimestamp,
         owner: "Employee",
         isAvailable: true,
         type: "Full-Day"
-      };
-      user.availability.push(newAvailability);
+      }];
+      // user.availability.push(newAvailability);
     }
 
     user.refreshToken = refreshToken;
@@ -197,7 +211,6 @@ const loginEmployee = async (req, res) => {
         success: true,
       });
   } catch (error) {
-    console.error("Error in loginEmployee:", error);
     return res.status(500).json({
       message: "Something went wrong while logging in user",
       success: false,
@@ -207,18 +220,20 @@ const loginEmployee = async (req, res) => {
   }
 };
 function parseCustomDate(dateString) {
+  if (!dateString) {
+    console.error("Invalid date string:", dateString);
+    return new Date(); // Return current date as fallback
+  }
   const [datePart, timePart] = dateString.split(",");
   const [day, month, year] = datePart.split("-");
   const [time, ampm] = timePart.split(/(?=[ap]m)/i);
   const [hours, minutes] = time.split(":");
-
   let parsedHours = parseInt(hours);
   if (ampm.toLowerCase() === "pm" && parsedHours !== 12) {
     parsedHours += 12;
   } else if (ampm.toLowerCase() === "am" && parsedHours === 12) {
     parsedHours = 0;
   }
-
   return new Date(year, month - 1, day, parsedHours, parseInt(minutes));
 }
 const logoutEmployee = async (req, res) => {
