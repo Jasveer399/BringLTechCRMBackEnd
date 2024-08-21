@@ -105,7 +105,7 @@ const updatePassword = async (req, res) => {
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
     if (!isPasswordCorrect) {
-      return res.json({
+      return res.status(400).json({
         status: 400,
         message: "Wrong Password",
         success: false,
