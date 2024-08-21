@@ -41,7 +41,7 @@ const employeeRole = async (req, res) => {
 
 const getAllrole = async (req, res) => {
   try {
-    const config = await Config.findOne();
+    const config = await Config.findOne().sort("-createdAt");
     if (!config) {
       return res.status(404).json({ message: "No roles found" });
     }
@@ -96,7 +96,7 @@ const addHolidays = async (req, res) => {
 
 const getHolidays = async (req, res) => {
   try {
-    const config = await Config.findOne();
+    const config = await Config.findOne().sort("-createdAt");
     if (!config) {
       return res.status(404).json({ message: "Holidays not found" });
     }

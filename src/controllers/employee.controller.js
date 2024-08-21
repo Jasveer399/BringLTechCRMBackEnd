@@ -455,6 +455,9 @@ const getAllEmployee = async (req, res) => {
           },
         },
       },
+      {
+        $sort: { "employee.createdAt": -1 }
+      }
     ];
 
     const allEmployees = await Employee.aggregate(pipeline);
@@ -472,6 +475,9 @@ const getAllEmployee = async (req, res) => {
           name: "$_id",
           value: 1
         }
+      },
+      {
+        $sort: { value: -1 }
       }
     ])
 
@@ -995,6 +1001,10 @@ const getEmployeeRatings = async (req, res) => {
     });
   }
 };
+
+const checkSalary = async (req, res) => {
+  
+}
 
 
 
