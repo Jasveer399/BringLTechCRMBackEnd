@@ -183,12 +183,14 @@ const loginEmployee = async (req, res) => {
         user.availability.push(newAvailability);
       }
     } else {
-      user.availability = [{
-        availableFrom: formattedLoginTimestamp,
-        owner: "Employee",
-        isAvailable: true,
-        type: "Full-Day"
-      }];
+      user.availability = [
+        {
+          availableFrom: formattedLoginTimestamp,
+          owner: "Employee",
+          isAvailable: true,
+          type: "Full-Day",
+        },
+      ];
       // user.availability.push(newAvailability);
     }
 
@@ -461,8 +463,8 @@ const getAllEmployee = async (req, res) => {
         },
       },
       {
-        $sort: { "employee.createdAt": -1 }
-      }
+        $sort: { "employee.createdAt": -1 },
+      },
     ];
 
     const allEmployees = await Employee.aggregate(pipeline);
@@ -479,13 +481,13 @@ const getAllEmployee = async (req, res) => {
           _id: 0,
           name: "$_id",
 
-          value: 1
-        }
+          value: 1,
+        },
       },
       {
-        $sort: { value: -1 }
-      }
-    ])
+        $sort: { value: -1 },
+      },
+    ]);
 
     console.log("employee Positions: ", employeePositions);
 
@@ -1013,20 +1015,60 @@ const getEmployeeRatings = async (req, res) => {
 };
 
 const checkSalary = async (req, res) => {
-  
-}
+  const employeeId = req.user?._id;
+  const { password } = req.body;
+  console.log("password =>", password, employeeId);
+  if (!employeeId || !password) {
+    return res.status(400).json({
+      message: "Enter a Rights Password",
+      success: false,
+    });
+  }
+  try {
+    const user = await Employee.findById({ _id: employeeId });
+    if (!user) {
+      return res.status(400).json({
+        message: "Invalid credentials",
+        success: false,
+      });
+    }
+    const isPasswordCorrect = await user.isPasswordCorrect(password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({
+        message: "Wrong Password",
+        success: false,
+      });
+    }
+    return res.status(200).json({
+      message: "Salary Check Successful",
+      success: true,
+    });
+  } catch {
+    console.error("Error in checking salary:", error);
+    return res.status(500).json({
+      message: "Error while checking salary",
+      success: false,
+    });
+  }
+};
 
 const deleteEmployee = async (req, res) => {
   const { _id } = req.body;
 
   try {
-    const deletedEmployee = await Employee.findByIdAndDelete({_id})
+    const deletedEmployee = await Employee.findByIdAndDelete({ _id });
 
-    const deletedTasks = await Task.deleteMany({ assignedTo: new mongoose.Types.ObjectId(_id) })
+    const deletedTasks = await Task.deleteMany({
+      assignedTo: new mongoose.Types.ObjectId(_id),
+    });
 
-    const deletedBreaksRecord = await Break.deleteMany({ employeeId: new mongoose.Types.ObjectId(_id) })
+    const deletedBreaksRecord = await Break.deleteMany({
+      employeeId: new mongoose.Types.ObjectId(_id),
+    });
 
-    const deletedLeavesRecord = await Leave.deleteMany({ employeeId: new mongoose.Types.ObjectId(_id) })
+    const deletedLeavesRecord = await Leave.deleteMany({
+      employeeId: new mongoose.Types.ObjectId(_id),
+    });
 
     if (!deletedEmployee) {
       return res.status(500).json({
@@ -1067,4 +1109,5 @@ export {
   changeNewPassword,
   getEmployeeRatings,
   deleteEmployee,
+  checkSalary,
 };

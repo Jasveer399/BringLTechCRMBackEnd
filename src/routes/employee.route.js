@@ -1,5 +1,6 @@
 import {
   changeNewPassword,
+  checkSalary,
   createEmployee,
   deleteEmployee,
   getAllEmployee,
@@ -45,5 +46,6 @@ router.post("/updateEmployee", verifyJWT(["employee"]), updateEmployee)
 router.post("/changeNewPassword", verifyJWT(["employee"]), changeNewPassword)
 router.get("/getEmployeeRatings", verifyJWT(["admin"]), getEmployeeRatings)
 router.post("/deleteEmployee", verifyJWT(["admin"]), deleteEmployee)
+router.post("/checksalary", verifyJWT(["employee"]),checkSalary)
 
 export default router;
