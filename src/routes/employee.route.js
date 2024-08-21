@@ -1,6 +1,7 @@
 import {
   changeNewPassword,
   createEmployee,
+  deleteEmployee,
   getAllEmployee,
   getCurrentEmployee,
   getEmployeeData,
@@ -43,5 +44,6 @@ router.post('/upload-image', upload.single('image'),uploadImage);
 router.post("/updateEmployee", verifyJWT(["employee"]), updateEmployee)
 router.post("/changeNewPassword", verifyJWT(["employee"]), changeNewPassword)
 router.get("/getEmployeeRatings", verifyJWT(["admin"]), getEmployeeRatings)
+router.post("/deleteEmployee", verifyJWT(["admin"]), deleteEmployee)
 
 export default router;

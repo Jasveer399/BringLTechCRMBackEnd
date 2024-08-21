@@ -32,7 +32,10 @@ const employeeSchema = new Schema(
         phoneNo:{
             type: String,
         },
-        address: {
+        currentAddress: {
+            type: String,
+        },
+        permanentAddress: {
             type: String,
         },
         gender:{
@@ -65,6 +68,9 @@ const employeeSchema = new Schema(
                 owner: {
                     type: String,
                     required: true
+                },
+                type: {
+                    type: String
                 }
             }
         ],

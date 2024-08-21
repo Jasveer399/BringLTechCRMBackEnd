@@ -274,6 +274,64 @@ const taskDelete = async (req, res) => {
     success: true,
   });
 };
+const editTaskHandler = async (req, res) => {
+  const {
+    _id,
+    title,
+    description ,
+    timeTo,
+    timeFrom,
+    link,
+    date,
+  } = req.body;
+  console.log(req.body);
+  try {
+    if (
+      !title &&
+      !description &&
+      !timeTo &&
+      !timeFrom &&
+      !date
+    ) {
+      return res.status(400).json({
+        messaage: "All field are required",
+        success: false,
+      });
+    }
+    const task = await Task.findById(_id);
+    if (!task) {
+      return res.status(400).json({
+        messaage: "Task Not Found",
+        success: false,
+      });
+    }
+    task.title = title;
+    task.description = description;
+    task.timeTo = timeTo;
+    task.timeFrom = timeFrom;
+    task.date = date
+    task.link = link
+    task.tasktype = "new";
+    const editedTask = await task.save();
+    if (!editedTask) {
+      return res.status(500).json({
+        messaage: "Error while Modifying task",
+        success: false,
+      });
+    }
+    return res.status(200).json({
+      data: editedTask,
+      messaage: "Task Edited Successfully",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      messaage: "Internal Server Error",
+      success: false,
+      error,
+    });
+  }
+};
 const modifyTaskHandler = async (req, res) => {
   const {
     _id,
@@ -605,6 +663,7 @@ export {
   getSpecificEmployeeTask,
   taskVerifyHandler,
   taskDelete,
+  editTaskHandler,
   modifyTaskHandler,
   updateTaskHandler,
   taskAdminVerificationHandler,

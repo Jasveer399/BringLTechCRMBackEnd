@@ -24,13 +24,42 @@ const createLeave = async (req, res) => {
         success: false,
       });
     }
+    console.log(req.body)
+    if (leaveType === "Half-Day") {
+      // Find the matching availability object
+      const availabilityIndex = user.availability.findIndex(
+        (avail) => avail.availableFrom.split(",")[0] === date
+      );
+      console.log(availabilityIndex)
 
-    const newAvailability = {
-      date: date,
-      owner: "Employee",
-      isAvailable: false,
-    };
-    user.availability.push(newAvailability);
+      if (availabilityIndex !== -1) {
+        // Update existing availability
+        user.availability[availabilityIndex].isAvailable = false;
+        user.availability[availabilityIndex].type = leaveType;
+        user.availability[availabilityIndex].owner = "Employee";
+        user.availability[availabilityIndex].date = date;
+      } else {
+        // If no matching availability found, create a new one
+        const newAvailability = {
+          // availableFrom: date,
+          // availableTo: date, // Assuming same date for availableTo
+          isAvailable: false,
+          date: date,
+          owner: "Employee",
+          type: leaveType,
+        };
+        user.availability.push(newAvailability);
+      }
+    } else {
+      // For full-day leaves, create a new availability entry
+      const newAvailability = {
+        date: date,
+        owner: "Employee",
+        isAvailable: false,
+        type: leaveType,
+      };
+      user.availability.push(newAvailability);
+    }
 
     const leave = await Leave.create({
       employeeId,
@@ -117,24 +146,24 @@ const getEmployeesOnLeaveToday = async (req, res) => {
   try {
     // Get today's date in the format dd-M-yyyy
     const dateTime = formatDate(new Date());
-    const today = dateTime.split(",")[0]
+    const today = dateTime.split(",")[0];
 
     const employeesOnLeave = await Leave.aggregate([
       {
         $match: {
-          date: today
-        }
+          date: today,
+        },
       },
       {
         $lookup: {
           from: "employees", // Assuming your Employee collection name is "employees"
           localField: "employeeId",
           foreignField: "_id",
-          as: "employeeDetails"
-        }
+          as: "employeeDetails",
+        },
       },
       {
-        $unwind: "$employeeDetails"
+        $unwind: "$employeeDetails",
       },
       {
         $project: {
@@ -143,9 +172,9 @@ const getEmployeesOnLeaveToday = async (req, res) => {
           reason: 1,
           date: 1,
           employeeName: "$employeeDetails.name",
-          employeeID: "$employeeDetails._id"
-        }
-      }
+          employeeID: "$employeeDetails._id",
+        },
+      },
     ]);
 
     const count = employeesOnLeave.length;
@@ -154,17 +183,15 @@ const getEmployeesOnLeaveToday = async (req, res) => {
       success: true,
       message: "Employees on leave today fetched successfully",
       count: count,
-      data: employeesOnLeave
+      data: employeesOnLeave,
     });
-
   } catch (error) {
     return res.status(500).json({
       error: error,
       message: "Error while counting employees on leave today",
-      success: false
+      success: false,
     });
   }
 };
-
 
 export { createLeave, fetchLeaveOfSpecificemployee, getEmployeesOnLeaveToday };

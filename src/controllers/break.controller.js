@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Break } from "../model/break.model.js";
 
 const breakSetter = async (req, res) => {
@@ -127,4 +128,113 @@ const setEndTime = async (req, res) => {
   }
 };
 
-export { breakSetter, setEndTime };
+const getEmployeesTodayBreaks = async (req, res) => {
+  try {
+    // Get today's date in the format "YYYY-MM-DD"
+    const today = new Date().toISOString().split("T")[0];
+
+    // Find all breaks for today
+    const todayBreaks = await Break.find({ date: today })
+      .populate("employeeId", "name email") // Assuming you want to populate employee details
+      .sort({ createdAt: 1 }); // Sort by creation time, oldest first
+
+    return res.status(200).json({
+      message: "Successfully retrieved today's breaks",
+      success: true,
+      data: todayBreaks,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+      message: "Error while getting employees today's breaks !!",
+      success: false,
+    });
+  }
+};
+
+const getEmployeeMonthlyBreaks = async (req, res) => {
+  try {
+    const { employeeId, monthYear } = req.body; // Now expecting monthYear parameter
+    console.log("req.body: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",req.body)
+
+    // Validate if the employeeId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(employeeId)) {
+      return res.status(400).json({
+        message: "Invalid employee ID",
+        success: false
+      });
+    }
+
+    // Validate monthYear format
+    const monthYearRegex = /^\d{4}-\d{2}$/;
+    if (!monthYearRegex.test(monthYear)) {
+      return res.status(400).json({
+        message: "Invalid month-year format. Expected format: YYYY-MM",
+        success: false
+      });
+    }
+
+    // Parse the month and year
+    const [year, month] = monthYear.split('-').map(Number);
+
+    // Get the first and last day of the specified month
+    const firstDayOfMonth = new Date(year, month - 1, 1);
+    const lastDayOfMonth = new Date(year, month, 0);
+
+    // Format dates as strings to match your schema
+    const startDate = firstDayOfMonth.toISOString().split('T')[0];
+    const endDate = lastDayOfMonth.toISOString().split('T')[0];
+
+    // Query for the employee's breaks in the specified month
+    const breaks = await Break.find({
+      employeeId: employeeId,
+      date: { $gte: startDate, $lte: endDate }
+    }).sort({ date: 1 });
+
+    // Process the breaks to group by date and break type
+    const processedBreaks = breaks.reduce((acc, breakItem) => {
+      if (!acc[breakItem.date]) {
+        acc[breakItem.date] = {
+          date: breakItem.date,
+          lunchBreak: '',
+          teaBreak: '',
+          snacksBreak: ''
+        };
+      }
+
+      const formatTime = (start, end) => start && end ? `${start} - ${end}` : '';
+
+      switch (breakItem.breakType) {
+        case 'Lunch':
+          acc[breakItem.date].lunchBreak = formatTime(breakItem.lunchBreakStart, breakItem.lunchBreakEnd);
+          break;
+        case 'Tea':
+          acc[breakItem.date].teaBreak = formatTime(breakItem.teaBreakStart, breakItem.teaBreakEnd);
+          break;
+        case 'Snacks':
+          acc[breakItem.date].snacksBreak = formatTime(breakItem.snacksBreakStart, breakItem.snacksBreakEnd);
+          break;
+      }
+
+      return acc;
+    }, {});
+
+    // Convert the processed breaks object to an array
+    const breakSummary = Object.values(processedBreaks);
+
+    return res.status(200).json({
+      message: `Successfully retrieved employee's breaks for ${monthYear}`,
+      success: true,
+      data: breakSummary
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+      message: "Error while getting employee's monthly breaks!",
+      success: false,
+    });
+  }
+};
+
+export { breakSetter, setEndTime, getEmployeesTodayBreaks, getEmployeeMonthlyBreaks };

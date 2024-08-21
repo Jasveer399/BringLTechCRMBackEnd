@@ -4,7 +4,10 @@ import { notifyAdmin, onMailer } from "../utils/mailer.js";
 import mongoose from "mongoose";
 import { uploadFileonCloudinary } from "../utils/cloudinary.js";
 import fs from "fs";
-import  bcrypt  from "bcrypt"
+import bcrypt from "bcrypt";
+import { Task } from "../model/task.model.js";
+import { Break } from "../model/break.model.js";
+import { Leave } from "../model/leave.model.js";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -184,7 +187,9 @@ const loginEmployee = async (req, res) => {
         availableFrom: formattedLoginTimestamp,
         owner: "Employee",
         isAvailable: true,
+        type: "Full-Day"
       }];
+      // user.availability.push(newAvailability);
     }
 
     user.refreshToken = refreshToken;
@@ -466,13 +471,14 @@ const getAllEmployee = async (req, res) => {
       {
         $group: {
           _id: "$position",
-          value: { $sum: 1 }
-        }
+          value: { $sum: 1 },
+        },
       },
       {
         $project: {
           _id: 0,
           name: "$_id",
+
           value: 1
         }
       },
@@ -481,7 +487,7 @@ const getAllEmployee = async (req, res) => {
       }
     ])
 
-    console.log("employee Positions: ", employeePositions)
+    console.log("employee Positions: ", employeePositions);
 
     if (!allEmployees || allEmployees.length === 0) {
       return res.status(404).json({
@@ -580,12 +586,12 @@ const getCurrentEmployee = async (req, res) => {
   const d = new Date();
   const year = d.getFullYear();
   const month = d.getMonth() + 1;
-  const { _id } = req.query
-  let id
+  const { _id } = req.query;
+  let id;
   if (_id) {
-    id = new mongoose.Types.ObjectId(_id)
+    id = new mongoose.Types.ObjectId(_id);
   } else {
-    id = req.user?._id
+    id = req.user?._id;
   }
   try {
     const pipeline = [
@@ -846,7 +852,8 @@ const updateEmployee = async (req, res) => {
           name: profile.firstName,
           email: profile.email,
           phoneNo: profile.phone,
-          address: profile.address,
+          permanentAddress: profile.permanentAddress,
+          currentAddress: profile.currentAddress,
           gender: profile.gender,
           dob: profile.dateOfBirth,
           twitter: profile.twitter,
@@ -932,7 +939,9 @@ const changeNewPassword = async (req, res) => {
 
 const getEmployeeRatings = async (req, res) => {
   try {
-    const employees = await Employee.find().select('name position monthlyRating maxMonthlyRating');
+    const employees = await Employee.find().select(
+      "name position monthlyRating maxMonthlyRating"
+    );
 
     const getStatus = (score) => {
       if (score >= 90) return "Excellent";
@@ -947,17 +956,18 @@ const getEmployeeRatings = async (req, res) => {
       "Very Good": 0,
       Good: 0,
       Satisfactory: 0,
-      Poor: 0
+      Poor: 0,
     };
 
-    const employeeRatings = employees.map(employee => {
-      const averageScore = employee.maxMonthlyRating > 0 
-        ? (employee.monthlyRating / employee.maxMonthlyRating) * 100 
-        : 0;
-      
+    const employeeRatings = employees.map((employee) => {
+      const averageScore =
+        employee.maxMonthlyRating > 0
+          ? (employee.monthlyRating / employee.maxMonthlyRating) * 100
+          : 0;
+
       const roundedScore = Math.round(averageScore);
       const status = getStatus(roundedScore);
-      
+
       // Increment the count for this status
       statusCounts[status]++;
 
@@ -965,7 +975,7 @@ const getEmployeeRatings = async (req, res) => {
         name: employee.name,
         position: employee.position,
         score: roundedScore,
-        status: status
+        status: status,
       };
     });
 
@@ -975,29 +985,29 @@ const getEmployeeRatings = async (req, res) => {
     // Add rank to each employee
     const rankedEmployeeRatings = employeeRatings.map((employee, index) => ({
       rank: index + 1,
-      ...employee
+      ...employee,
     }));
 
     // Convert statusCounts to the format needed for the pie chart
     const statusData = Object.entries(statusCounts).map(([name, value]) => ({
       name,
-      value
+      value,
     }));
 
     return res.status(200).json({
       message: "Employee ratings fetched successfully",
       data: {
         employeeRatings: rankedEmployeeRatings,
-        statusSummary: statusData
+        statusSummary: statusData,
       },
-      success: true
+      success: true,
     });
   } catch (error) {
     console.error("Error in getEmployeeRatings:", error);
     return res.status(500).json({
       error: error.message,
       message: "Error while fetching employee ratings",
-      success: false
+      success: false,
     });
   }
 };
@@ -1006,7 +1016,41 @@ const checkSalary = async (req, res) => {
   
 }
 
+const deleteEmployee = async (req, res) => {
+  const { _id } = req.body;
 
+  try {
+    const deletedEmployee = await Employee.findByIdAndDelete({_id})
+
+    const deletedTasks = await Task.deleteMany({ assignedTo: new mongoose.Types.ObjectId(_id) })
+
+    const deletedBreaksRecord = await Break.deleteMany({ employeeId: new mongoose.Types.ObjectId(_id) })
+
+    const deletedLeavesRecord = await Leave.deleteMany({ employeeId: new mongoose.Types.ObjectId(_id) })
+
+    if (!deletedEmployee) {
+      return res.status(500).json({
+        message: "Employee Not Found !!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      data: deleteEmployee,
+      tasks: deletedTasks,
+      breaks: deletedBreaksRecord,
+      leaves: deletedLeavesRecord,
+      message: "Employee Deleted Successfully !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+      message: "Error while deleting employee !!",
+      success: false,
+    });
+  }
+};
 
 export {
   createEmployee,
@@ -1022,4 +1066,5 @@ export {
   updateEmployee,
   changeNewPassword,
   getEmployeeRatings,
+  deleteEmployee,
 };
