@@ -319,7 +319,7 @@ function formatDate(date) {
 }
 
 const getAllEmployee = async (req, res) => {
-  const { year, month } = req.body; // Assuming year and month are provided as query parameters
+  const { year, month } = req.body; // Assuming year and month are provided in the request body
 
   try {
     const pipeline = [
@@ -346,77 +346,15 @@ const getAllEmployee = async (req, res) => {
             $cond: {
               if: { $ne: ["$availabilityArray", undefined] },
               then: {
-                $dateFromParts: {
-                  year: {
-                    $toInt: {
-                      $arrayElemAt: [
-                        {
-                          $split: [
-                            {
-                              $arrayElemAt: [
-                                {
-                                  $split: [
-                                    "$availabilityArray.availableFrom",
-                                    ",",
-                                  ],
-                                },
-                                0,
-                              ],
-                            },
-                            "-",
-                          ],
-                        },
-                        2,
-                      ],
-                    },
+                $dateFromString: {
+                  dateString: {
+                    $arrayElemAt: [
+                      { $split: ["$availabilityArray.availableFrom", ","] },
+                      0,
+                    ]
                   },
-                  month: {
-                    $toInt: {
-                      $arrayElemAt: [
-                        {
-                          $split: [
-                            {
-                              $arrayElemAt: [
-                                {
-                                  $split: [
-                                    "$availabilityArray.availableFrom",
-                                    ",",
-                                  ],
-                                },
-                                0,
-                              ],
-                            },
-                            "-",
-                          ],
-                        },
-                        1,
-                      ],
-                    },
-                  },
-                  day: {
-                    $toInt: {
-                      $arrayElemAt: [
-                        {
-                          $split: [
-                            {
-                              $arrayElemAt: [
-                                {
-                                  $split: [
-                                    "$availabilityArray.availableFrom",
-                                    ",",
-                                  ],
-                                },
-                                0,
-                              ],
-                            },
-                            "-",
-                          ],
-                        },
-                        0,
-                      ],
-                    },
-                  },
-                },
+                  format: "%d-%m-%Y"
+                }
               },
               else: null,
             },
@@ -437,7 +375,13 @@ const getAllEmployee = async (req, res) => {
                     { $eq: [{ $month: "$parsedDate" }, parseInt(month)] },
                   ],
                 },
-                1,
+                {
+                  $cond: [
+                    { $eq: ["$availabilityArray.type", "Half-Day"] },
+                    0.5,
+                    1
+                  ]
+                },
                 0,
               ],
             },
@@ -480,7 +424,6 @@ const getAllEmployee = async (req, res) => {
         $project: {
           _id: 0,
           name: "$_id",
-
           value: 1,
         },
       },
@@ -625,77 +568,15 @@ const getCurrentEmployee = async (req, res) => {
             $cond: {
               if: { $ne: ["$availabilityArray", undefined] },
               then: {
-                $dateFromParts: {
-                  year: {
-                    $toInt: {
-                      $arrayElemAt: [
-                        {
-                          $split: [
-                            {
-                              $arrayElemAt: [
-                                {
-                                  $split: [
-                                    "$availabilityArray.availableFrom",
-                                    ",",
-                                  ],
-                                },
-                                0,
-                              ],
-                            },
-                            "-",
-                          ],
-                        },
-                        2,
-                      ],
-                    },
+                $dateFromString: {
+                  dateString: {
+                    $arrayElemAt: [
+                      { $split: ["$availabilityArray.availableFrom", ","] },
+                      0,
+                    ]
                   },
-                  month: {
-                    $toInt: {
-                      $arrayElemAt: [
-                        {
-                          $split: [
-                            {
-                              $arrayElemAt: [
-                                {
-                                  $split: [
-                                    "$availabilityArray.availableFrom",
-                                    ",",
-                                  ],
-                                },
-                                0,
-                              ],
-                            },
-                            "-",
-                          ],
-                        },
-                        1,
-                      ],
-                    },
-                  },
-                  day: {
-                    $toInt: {
-                      $arrayElemAt: [
-                        {
-                          $split: [
-                            {
-                              $arrayElemAt: [
-                                {
-                                  $split: [
-                                    "$availabilityArray.availableFrom",
-                                    ",",
-                                  ],
-                                },
-                                0,
-                              ],
-                            },
-                            "-",
-                          ],
-                        },
-                        0,
-                      ],
-                    },
-                  },
-                },
+                  format: "%d-%m-%Y"
+                }
               },
               else: null,
             },
@@ -716,7 +597,13 @@ const getCurrentEmployee = async (req, res) => {
                     { $eq: [{ $month: "$parsedDate" }, parseInt(month)] },
                   ],
                 },
-                1,
+                {
+                  $cond: [
+                    { $eq: ["$availabilityArray.type", "Half-Day"] },
+                    0.5,
+                    1
+                  ]
+                },
                 0,
               ],
             },
@@ -742,7 +629,6 @@ const getCurrentEmployee = async (req, res) => {
         },
       },
     ];
-
     const employee = await Employee.aggregate(pipeline);
 
     if (!employee) {

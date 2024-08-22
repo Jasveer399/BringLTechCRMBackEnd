@@ -92,8 +92,15 @@ const createLeave = async (req, res) => {
 };
 
 const fetchLeaveOfSpecificemployee = async (req, res) => {
-  const { employeeId } = req.body;
-
+  // const { employeeId } = req.body;
+  let id
+  if (req.body.employeeId) {
+    id = req.body.employeeId
+  } else {
+    id = req.user?._id
+  }
+  console.log("ID", id)
+  console.log("req.body>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.", req.body)
   try {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-indexed
@@ -102,7 +109,7 @@ const fetchLeaveOfSpecificemployee = async (req, res) => {
     const leaves = await Leave.aggregate([
       {
         $match: {
-          employeeId: new mongoose.Types.ObjectId(employeeId),
+          employeeId: new mongoose.Types.ObjectId(id),
         },
       },
       {
@@ -194,4 +201,49 @@ const getEmployeesOnLeaveToday = async (req, res) => {
   }
 };
 
-export { createLeave, fetchLeaveOfSpecificemployee, getEmployeesOnLeaveToday };
+const fetchAllEmployeesLeaves = async (req, res) => {
+  try {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-indexed
+    const currentYear = currentDate.getFullYear();
+
+    const leaves = await Leave.aggregate([
+      {
+        $addFields: {
+          dateParts: {
+            $map: {
+              input: { $split: ["$date", "-"] },
+              as: "part",
+              in: { $toInt: "$$part" },
+            },
+          },
+        },
+      },
+      {
+        $match: {
+          $expr: {
+            $and: [
+              { $eq: [{ $arrayElemAt: ["$dateParts", 1] }, currentMonth] },
+              { $eq: [{ $arrayElemAt: ["$dateParts", 2] }, currentYear] },
+            ],
+          },
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      message: "Leaves fetched successfully",
+      success: true,
+      data: leaves,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+      message: "Error while fetching leaves !!",
+      success: false,
+    });
+  }
+};
+
+
+export { createLeave, fetchLeaveOfSpecificemployee, getEmployeesOnLeaveToday, fetchAllEmployeesLeaves };
