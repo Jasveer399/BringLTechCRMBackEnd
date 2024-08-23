@@ -8,6 +8,7 @@ import bcrypt from "bcrypt";
 import { Task } from "../model/task.model.js";
 import { Break } from "../model/break.model.js";
 import { Leave } from "../model/leave.model.js";
+import { Config } from "../model/config.model.js";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -351,10 +352,10 @@ const getAllEmployee = async (req, res) => {
                     $arrayElemAt: [
                       { $split: ["$availabilityArray.availableFrom", ","] },
                       0,
-                    ]
+                    ],
                   },
-                  format: "%d-%m-%Y"
-                }
+                  format: "%d-%m-%Y",
+                },
               },
               else: null,
             },
@@ -379,8 +380,8 @@ const getAllEmployee = async (req, res) => {
                   $cond: [
                     { $eq: ["$availabilityArray.type", "Half-Day"] },
                     0.5,
-                    1
-                  ]
+                    1,
+                  ],
                 },
                 0,
               ],
@@ -573,10 +574,10 @@ const getCurrentEmployee = async (req, res) => {
                     $arrayElemAt: [
                       { $split: ["$availabilityArray.availableFrom", ","] },
                       0,
-                    ]
+                    ],
                   },
-                  format: "%d-%m-%Y"
-                }
+                  format: "%d-%m-%Y",
+                },
               },
               else: null,
             },
@@ -601,8 +602,8 @@ const getCurrentEmployee = async (req, res) => {
                   $cond: [
                     { $eq: ["$availabilityArray.type", "Half-Day"] },
                     0.5,
-                    1
-                  ]
+                    1,
+                  ],
                 },
                 0,
               ],
@@ -817,7 +818,7 @@ const changeNewPassword = async (req, res) => {
     });
   } catch (error) {
     console.error("Error in changing new password:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Failed to update password",
       details: error.message,
       success: false,
@@ -980,6 +981,212 @@ const deleteEmployee = async (req, res) => {
   }
 };
 
+const addSalary = async (req, res) => {
+  const { salary } = req.body;
+  let _id;
+  if (req.body.employeeId) {
+    _id = new mongoose.Types.ObjectId(req.body.employeeId);
+  } else {
+    _id = req.user?._id;
+  }
+  console.log("Id in add salary: >>", _id);
+
+  try {
+    const employee = await Employee.findById({ _id });
+
+    if (!employee) {
+      return res.status(400).json({
+        error: error.message,
+        message: "Employee not found !!",
+        success: false,
+      });
+    }
+
+    employee.salary = salary;
+    await employee.save();
+
+    return res.status(200).json({
+      data: employee,
+      message: "Salary Added Successfully !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+      message: "Error while adding salary !!",
+      success: false,
+    });
+  }
+};
+
+const editSalary = async (req, res) => {
+  const { salary } = req.body;
+  let _id;
+  if (req.body.employeeId) {
+    _id = new mongoose.Types.ObjectId(req.body.employeeId);
+  } else {
+    _id = req.user?._id;
+  }
+  console.log("Id in edit salary: >>", _id);
+
+  try {
+    const employee = await Employee.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          salary: salary,
+        },
+      },
+      { new: true }
+    );
+
+    if (!employee) {
+      return res.status(400).json({
+        error: error.message,
+        message: "Employee not found !!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      data: employee,
+      message: "Salary Edited Successfully !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+      message: "Error while editing salary !!",
+      success: false,
+    });
+  }
+};
+
+// import { Employee } from "../models/employee.model.js";
+// import { Leave } from "../models/leave.model.js";
+// import { Salary } from "../models/salary.model.js";
+// import { Config } from "../models/config.model.js";
+
+const getEmployeeSalary = async (req, res) => {
+  let _id;
+  if (req.body.employeeId) {
+    _id = new mongoose.Types.ObjectId(req.body.employeeId);
+  } else {
+    _id = req.user?._id;
+  }
+
+  console.log("ID: ", _id);
+  try {
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-indexed
+    const currentYear = currentDate.getFullYear();
+
+    // Get employee's base salary
+    const employee = await Employee.findOne({ _id }).sort({ createdAt: -1 });
+    if (!employee) {
+      return res.status(404).json({
+        message: "Employee not found !!",
+        success: false,
+      });
+    }
+
+    console.log("employee: >", employee);
+
+    const baseSalary = employee.salary;
+
+    console.log("base salary: ", baseSalary);
+
+    if (!baseSalary) {
+      return res.status(404).json({
+        message: "Salary not added yet !!",
+        success: false,
+      });
+    }
+
+    // Get leave records for the current month
+    const leaves = await Leave.find({
+      employeeId: _id,
+      date: new RegExp(`-${currentMonth}-${currentYear}$`),
+    });
+
+    console.log("Leaves: ", leaves);
+
+    // Get holidays from Config
+    const config = await Config.findOne({});
+    const holidays = config.holidays.filter((holiday) => {
+      const holidayDate = new Date(holiday.date);
+      return (
+        holidayDate.getMonth() === currentMonth - 1 &&
+        holidayDate.getFullYear() === currentYear
+      );
+    });
+
+    console.log("holidays: ", holidays);
+
+    // Calculate working days in the current month
+    const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+    let workingDays = daysInMonth;
+
+    console.log("days in month: ", daysInMonth);
+
+    // Subtract Sundays
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(Date.UTC(currentYear, currentMonth - 1, day));
+      if (date.getUTCDay() === 0) {
+        // Sunday
+        workingDays--;
+      }
+      console.log(date.toISOString().split("T")[0]);
+    }
+
+    console.log("working days after minus sunday: ", workingDays);
+
+    // Subtract holidays
+    workingDays -= holidays.length;
+
+    console.log("working days after minus holidays: ", workingDays);
+
+    // Calculate per-day salary
+    const perDaySalary = baseSalary / workingDays;
+
+    console.log("per day salary: ", perDaySalary);
+
+    // Calculate salary deductions
+    let deductions = 0;
+    leaves.forEach((leave) => {
+      console.log("deductions: ", deductions);
+      if (leave.leaveType === "Half-Day") {
+        deductions += perDaySalary / 2;
+      } else {
+        deductions += perDaySalary;
+      }
+    });
+
+    // Calculate final salary
+    const finalSalary = baseSalary - deductions;
+
+    console.log("final salary: ", finalSalary);
+
+    return res.status(200).json({
+      message: "Employee salary fetched successfully",
+      data: {
+        baseSalary,
+        deductions,
+        finalSalary,
+        workingDays,
+        leavesCount: leaves.length,
+      },
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch employee salary",
+      error: error.message,
+      success: false,
+    });
+  }
+};
+
 export {
   createEmployee,
   loginEmployee,
@@ -996,4 +1203,7 @@ export {
   getEmployeeRatings,
   deleteEmployee,
   checkSalary,
+  addSalary,
+  editSalary,
+  getEmployeeSalary,
 };

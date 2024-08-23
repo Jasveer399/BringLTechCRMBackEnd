@@ -28,7 +28,7 @@ const createLeave = async (req, res) => {
     if (leaveType === "Half-Day") {
       // Find the matching availability object
       const availabilityIndex = user.availability.findIndex(
-        (avail) => avail.availableFrom.split(",")[0] === date
+        (avail) => avail.availableFrom && avail.availableFrom.split(",")[0] === date
       );
       console.log(availabilityIndex)
 

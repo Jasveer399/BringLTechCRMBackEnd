@@ -1,12 +1,15 @@
 import {
+  addSalary,
   changeNewPassword,
   checkSalary,
   createEmployee,
   deleteEmployee,
+  editSalary,
   getAllEmployee,
   getCurrentEmployee,
   getEmployeeData,
   getEmployeeRatings,
+  getEmployeeSalary,
   getSpecificEmployeeData,
   getSpecificEmployeeTasks,
   loginEmployee,
@@ -47,5 +50,8 @@ router.post("/changeNewPassword", verifyJWT(["employee"]), changeNewPassword)
 router.get("/getEmployeeRatings", verifyJWT(["admin"]), getEmployeeRatings)
 router.post("/deleteEmployee", verifyJWT(["admin"]), deleteEmployee)
 router.post("/checksalary", verifyJWT(["employee"]),checkSalary)
+router.post("/addSalary", verifyJWT(["employee", "admin"]),addSalary)
+router.post("/editSalary", verifyJWT(["employee", "admin"]),editSalary)
+router.post("/getEmployeeSalary", verifyJWT(["employee", "admin"]),getEmployeeSalary)
 
 export default router;

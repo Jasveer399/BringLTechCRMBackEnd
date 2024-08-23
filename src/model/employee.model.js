@@ -99,6 +99,9 @@ const employeeSchema = new Schema(
         LunchBreak:{
             type:String,
         },
+        salary: {
+            type: String
+        }
     },
     {
         timestamps: true
