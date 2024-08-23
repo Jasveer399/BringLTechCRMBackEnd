@@ -14,7 +14,7 @@ const router = Router();
 router.post("/employeeRole", verifyJWT(["admin"]), employeeRole);
 router.get("/getAllrole", verifyJWT(["admin"]), getAllrole);
 router.post("/addholidy", verifyJWT(["admin"]), addHolidays);
-router.post("/getholiday", verifyJWT(["admin"]), getHolidays);
+router.post("/getholiday", verifyJWT(["admin", "employee"]), getHolidays);
 router.post("/deleteRole", verifyJWT(["admin"]), deleteRole);
 router.post("/editRole", verifyJWT(["admin"]), editRole);
 router.delete("/deleteHoliday", verifyJWT(["admin"]), deleteHoliday);

@@ -8,6 +8,7 @@ const employeeSchema = new Schema(
       type: String,
       required: true,
     },
+    
     position: {
       type: String,
       required: true,
@@ -115,6 +116,9 @@ const employeeSchema = new Schema(
       type: String,
     },
     LunchBreak: {
+      type: String,
+    },
+    salary: {
       type: String,
     },
   },
