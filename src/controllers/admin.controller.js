@@ -15,7 +15,7 @@ const generateAccessAndRefreshToken = async (userid) => {
   }
 };
 const createAdmin = async (req, res) => {
-  const { username, email, password,adminType} = req.body;
+  const { username, email, password, adminType } = req.body;
 
   if (!username || !email || !password) {
     return res.status(400).json({ message: "All fields are required." });
@@ -38,13 +38,11 @@ const createAdmin = async (req, res) => {
       adminType,
     });
 
-    return res
-      .status(200)
-      .json({
-        status:200,
-        message:"Admin Create SuccessFully",
-        success:true,
-      });
+    return res.status(200).json({
+      status: 200,
+      message: "Admin Create SuccessFully",
+      success: true,
+    });
   } catch (error) {
     return res.status(500).json({
       status: 500,
@@ -97,9 +95,11 @@ const adminlogin = async (req, res) => {
       .cookie("refreshToken", refreshToken, options)
       .json({
         data: loggedInUser,
-        adminType:loggedInUser.adminType,
+        adminType: loggedInUser.adminType,
+        id: loggedInUser._id,
+        senderType: "admin",
         success: true,
-        accessToken:accessToken,
+        accessToken: accessToken,
         refreshToken: refreshToken,
         messaage: "Logged In Successfully !!",
       });
@@ -133,22 +133,23 @@ const logoutAdmin = async (req, res) => {
       message: "Admin Logged Out Successfully",
       success: true,
     });
-}
-const getallAdmin = async (req, res) =>{
-   try {
-       const admins = await Admin.find({});
-       const count = admins.length;
-       return res.status(200).json({
-         data: admins,
-         count: count,
-         success: true,
-       });
-   } catch (error) {
-     return res.status(500).json({
-       messaage: "Internal Server Error",
-       success: false,
-       error,
-     });
-   }
-}
-export { createAdmin, adminlogin,logoutAdmin,getallAdmin};
+};
+const getallAdmin = async (req, res) => {
+  try {
+    const admins = await Admin.find({});
+    const count = admins.length;
+    console.log("Admin in Server =>", admins);
+    return res.status(200).json({
+      data: admins,
+      count: count,
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      messaage: "Internal Server Error",
+      success: false,
+      error,
+    });
+  }
+};
+export { createAdmin, adminlogin, logoutAdmin, getallAdmin };

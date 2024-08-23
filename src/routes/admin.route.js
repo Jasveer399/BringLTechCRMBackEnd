@@ -7,7 +7,7 @@ const router = Router();
 router.post("/",createAdmin);
 router.post("/login",adminlogin);
 router.get("/logout", verifyJWT(['admin']), logoutAdmin)
-router.post("/getalladmin",verifyJWT(['admin']), getallAdmin);
+router.post("/getalladmin",verifyJWT(['employee','admin']), getallAdmin);
 
 
 export default router;

@@ -4,6 +4,7 @@ import {
   createEmployee,
   deleteEmployee,
   getAllEmployee,
+  getAllMessages,
   getCurrentEmployee,
   getEmployeeData,
   getEmployeeRatings,
@@ -11,6 +12,8 @@ import {
   getSpecificEmployeeTasks,
   loginEmployee,
   logoutEmployee,
+  sendMailTochangePassword,
+  sendMessage,
   updateEmployee,
   updatePassword,
   uploadImage,
@@ -19,7 +22,7 @@ import { Router } from "express";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import multer from "multer";
 const router = Router();
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: "uploads/" });
 
 router.post("/", createEmployee);
 router.post("/login", loginEmployee);
@@ -39,13 +42,28 @@ router.post("/login", loginEmployee);
 router.post("/updatepassword", verifyJWT(["employee"]), updatePassword),
   router.get("/getAllEmployee", getAllEmployee);
 router.post("/logout", verifyJWT(["employee"]), logoutEmployee);
-router.get("/getCurrentEmployee", verifyJWT(["employee", "admin"]), getCurrentEmployee);
-router.post("/getSpecificEmployeeData",getSpecificEmployeeData);
-router.post('/upload-image', upload.single('image'),uploadImage);
-router.post("/updateEmployee", verifyJWT(["employee"]), updateEmployee)
-router.post("/changeNewPassword", verifyJWT(["employee"]), changeNewPassword)
-router.get("/getEmployeeRatings", verifyJWT(["admin"]), getEmployeeRatings)
-router.post("/deleteEmployee", verifyJWT(["admin"]), deleteEmployee)
-router.post("/checksalary", verifyJWT(["employee"]),checkSalary)
+router.get(
+  "/getCurrentEmployee",
+  verifyJWT(["employee", "admin"]),
+  getCurrentEmployee
+);
+router.post(
+  "/getSpecificEmployeeData",
+  verifyJWT(["employee", "admin"]),
+  getSpecificEmployeeData
+);
+router.post("/upload-image", upload.single("image"), uploadImage);
+router.post("/updateEmployee", verifyJWT(["employee"]), updateEmployee);
+router.post("/changeNewPassword", changeNewPassword);
+router.get("/getEmployeeRatings", verifyJWT(["admin"]), getEmployeeRatings);
+router.post("/deleteEmployee", verifyJWT(["admin"]), deleteEmployee);
+router.post("/checksalary", verifyJWT(["employee"]), checkSalary);
+router.post("/reset-password", sendMailTochangePassword);
+router.post("/sendMessage", verifyJWT(["admin", "employee"]), sendMessage);
+router.post(
+  "/getallMessage",
+  verifyJWT(["admin", "employee"]),
+  getAllMessages
+);
 
 export default router;

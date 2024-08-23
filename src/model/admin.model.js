@@ -1,6 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 
 const adminSchema = new Schema(
   {
@@ -18,13 +18,28 @@ const adminSchema = new Schema(
       type: String,
       required: true,
     },
-    adminType:{
+    adminType: {
       type: String,
-      enum: ['Admin', 'Manager', 'Hr'],
+      enum: ["Admin", "Manager", "Hr"],
       required: true,
     },
     accessToken: { type: String },
     refreshToken: { type: String },
+    massage: [
+      {
+        message: String,
+        sender: {
+          type: String,
+        },
+        receiver: {
+          type: String,
+        },
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   {
     timestamps: true,

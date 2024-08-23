@@ -16,7 +16,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://bringletech-crm-frontend.vercel.app",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -77,7 +77,7 @@ io.on("connection", (socket) => {
   console.log("New client connected");
 
   socket.on("join", (userId) => {
-    socket.join(userId);
+    socket.join(userId.toString());
     console.log(`User ${userId} joined their personal room`);
   });
   socket.on("join", (employeeId) => {
@@ -87,8 +87,7 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     console.log("Client disconnected");
-  });
-});
+  });});
 
 // Make io accessible to our routes
 app.set("io", io);

@@ -8,6 +8,8 @@ import bcrypt from "bcrypt";
 import { Task } from "../model/task.model.js";
 import { Break } from "../model/break.model.js";
 import { Leave } from "../model/leave.model.js";
+import sendPasswordResetEmail from "../utils/changepassword.js";
+import { Admin } from "../model/admin.model.js";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -210,6 +212,8 @@ const loginEmployee = async (req, res) => {
       .cookie("refreshToken", refreshToken, options)
       .json({
         data: loggedInUser,
+        id: loggedInUser._id,
+        senderType: "employee",
         accessToken,
         message: "Logged In Successfully!",
         success: true,
@@ -792,15 +796,21 @@ const getCurrentEmployee = async (req, res) => {
 };
 const getSpecificEmployeeData = async (req, res) => {
   const { id } = req.body;
+  let _id;
+  if (id) {
+    _id = new mongoose.Types.ObjectId(id);
+  } else {
+    _id = req.user?._id;
+  }
   console.log("Req Body", req.body);
-  if (!id) {
+  if (!_id) {
     return res.status(400).json({
       messaage: "Employee ID is required",
       success: false,
     });
   }
   try {
-    const employee = await Employee.findById(id).select(
+    const employee = await Employee.findById(_id).select(
       "-password -refreshToken"
     );
     if (!employee) {
@@ -880,53 +890,35 @@ const updateEmployee = async (req, res) => {
       .json({ message: "Failed to update employee", details: error.message });
   }
 };
-const changeOldPassword = async (req, res) => {
-  const { newPassword } = req.body;
-  if (!newPassword) {
-    return res
-      .status(400)
-      .json({ message: "New password is required", success: false });
-  }
-  try {
-    const password = await bcrypt.hash(newPassword, 10);
-    const employee = await Employee.findByIdAndUpdate(res.user?._id, {
-      $set: {
-        password,
-      },
-    });
-  } catch (error) {
-    console.error("Error in changing old password:", error);
-    res.status(500).json({
-      message: "Failed to change old password",
-      details: error.message,
+const changeNewPassword = async (req, res) => {
+  const { newPassword, otp, id } = req.body;
+  if (!newPassword || !otp || !id) {
+    return res.status(400).json({
+      message: "New password, OTP, and employee ID are required",
       success: false,
     });
   }
-};
-const changeNewPassword = async (req, res) => {
-  const { newPassword } = req.body;
-  if (!newPassword) {
-    return res
-      .status(400)
-      .json({ message: "New password is required", success: false });
-  }
+
   try {
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    const employee = await Employee.findByIdAndUpdate(
-      req.user?._id,
-      {
-        $set: {
-          password: hashedPassword,
-        },
-      },
-      { new: true }
-    ).select("-password -refreshToken");
+    console.log("EmployeeID and OTP =>", id, otp);
+    const employee = await Employee.findOne({
+      employeeId: id,
+      changepasswordcode: otp,
+    });
+    console.log("Employee found =>", employee);
     if (!employee) {
-      return res.status(404).json({ message: "Employee not found" });
+      return res.status(404).json({
+        message: "Employee not found or OTP is expired",
+        success: false,
+      });
     }
+    employee.password = newPassword;
+    employee.changepasswordcode = null;
+    await employee.save();
+
     return res.status(200).json({
       message: "Password updated successfully",
-      employee,
+      employee: employee,
       success: true,
     });
   } catch (error) {
@@ -938,7 +930,6 @@ const changeNewPassword = async (req, res) => {
     });
   }
 };
-
 const getEmployeeRatings = async (req, res) => {
   try {
     const employees = await Employee.find().select(
@@ -1093,6 +1084,119 @@ const deleteEmployee = async (req, res) => {
     });
   }
 };
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Example usage
+
+const sendMailTochangePassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res
+      .status(400)
+      .json({ message: "Email is required", success: false });
+  }
+  const employee = await Employee.findOne({ email });
+  if (!employee) {
+    return res
+      .status(404)
+      .json({ message: "Employee not found", success: false });
+  }
+  const generatedOTP = generateOTP();
+  employee.changepasswordcode = generatedOTP;
+  await employee.save();
+  const emailSent = await sendPasswordResetEmail(email, generatedOTP);
+  if (emailSent) {
+    res
+      .status(200)
+      .json({ message: "Password reset email sent", success: true });
+  } else {
+    res
+      .status(500)
+      .json({ message: "Failed to send password reset email", success: false });
+  }
+};
+
+const sendMessage = async (req, res) => {
+  const { message, receiverId, senderType } = req.body;
+  const senderId = req.user._id;
+
+  try {
+    const newMessage = {
+      message,
+      sender: senderId,
+      receiver: receiverId,
+      timestamp: new Date(),
+    };
+
+    const senderModel = senderType === "employee" ? Employee : Admin;
+    const receiverModel = senderType === "employee" ? Admin : Employee;
+
+    // Fix the typo here
+    await senderModel.findByIdAndUpdate(senderId, {
+      $push: { massage: newMessage },
+    });
+
+    await receiverModel.findByIdAndUpdate(receiverId, {
+      $push: { massage: newMessage },
+    });
+
+    // Emit to both sender and receiver rooms
+    const io = req.app.get("io");
+    io.to(senderId.toString())
+      .to(receiverId.toString())
+      .emit("new_message", newMessage);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Message sent successfully" });
+  } catch (error) {
+    console.error("Error sending message:", error);
+    res.status(500).json({ success: false, message: "Error sending message" });
+  }
+};
+
+const getAllMessages = async (req, res) => {
+  const userId = req.user._id;
+  const { otherUserId, userType } = req.body; // userType can be 'admin' or 'employee'
+
+  try {
+    let user;
+    if (userType === "admin") {
+      user = await Admin.findById(userId);
+    } else if (userType === "employee") {
+      user = await Employee.findById(userId);
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid user type" });
+    }
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    if (!user.massage || !Array.isArray(user.massage)) {
+      return res.status(200).json({ success: true, messages: [] });
+    }
+
+    const messages = user.massage
+      .filter(
+        (msg) => msg.sender === otherUserId || msg.receiver === otherUserId
+      )
+      .sort((a, b) => a.timestamp - b.timestamp);
+
+    res.status(200).json({ success: true, messages });
+  } catch (error) {
+    console.error("Error fetching message history:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Error fetching message history" });
+  }
+};
 
 export {
   createEmployee,
@@ -1110,4 +1214,7 @@ export {
   getEmployeeRatings,
   deleteEmployee,
   checkSalary,
+  sendMailTochangePassword,
+  sendMessage,
+  getAllMessages,
 };
