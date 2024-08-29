@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { Break } from "../model/break.model.js";
+import { Employee } from "../model/employee.model.js";
 
 const breakSetter = async (req, res) => {
   const { type, startTime, endTime, date } = req.body;
@@ -133,20 +134,40 @@ const getEmployeesTodayBreaks = async (req, res) => {
     // Get today's date in the format "YYYY-MM-DD"
     const today = new Date().toISOString().split("T")[0];
 
+    // Find all employees
+    const allEmployees = await Employee.find({}, 'name email');
+
     // Find all breaks for today
     const todayBreaks = await Break.find({ date: today })
-      .populate("employeeId", "name email") // Assuming you want to populate employee details
-      .sort({ createdAt: 1 }); // Sort by creation time, oldest first
+      .populate("employeeId", "name email")
+      .sort({ createdAt: 1 });
+
+    // Create a map of employee IDs to their breaks
+    const breakMap = new Map(todayBreaks.map(breakItem => [breakItem.employeeId._id.toString(), breakItem]));
+
+    // Combine employee data with break data
+    const combinedData = allEmployees.map(employee => {
+      const employeeBreak = breakMap.get(employee._id.toString());
+      return {
+        _id: employee._id,
+        name: employee.name,
+        email: employee.email,
+        date: today,
+        lunchBreak: employeeBreak?.lunchBreakStart ? `${employeeBreak.lunchBreakStart} - ${employeeBreak.lunchBreakEnd}` : "",
+        teaBreak: employeeBreak?.teaBreakStart ? `${employeeBreak.teaBreakStart} - ${employeeBreak.teaBreakEnd}` : "",
+        snacksBreak: employeeBreak?.snacksBreakStart ? `${employeeBreak.snacksBreakStart} - ${employeeBreak.snacksBreakEnd}` : "",
+      };
+    });
 
     return res.status(200).json({
-      message: "Successfully retrieved today's breaks",
+      message: "Successfully retrieved today's employee data",
       success: true,
-      data: todayBreaks,
+      data: combinedData,
     });
   } catch (error) {
     return res.status(500).json({
       error: error.message,
-      message: "Error while getting employees today's breaks !!",
+      message: "Error while getting employees today's data",
       success: false,
     });
   }

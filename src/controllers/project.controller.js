@@ -1,4 +1,5 @@
 import { Project } from "../model/project.model.js";
+import { Employee } from "../model/employee.model.js";
 
 const createProject = async (req, res) => {
   const { name, description, link, startDate, endDate, technologies } =
@@ -48,19 +49,42 @@ const getAllProjects = async (req, res) => {
 
     if (!projects) {
       return res.status(500).json({
-        messaage: "Projects not found !!",
+        message: "Projects not found!",
         success: false,
       });
     }
 
+    const projectsWithTeamDetails = await Promise.all(projects.map(async (project) => {
+      const teamDetails = await Promise.all(project.team.map(async (member) => {
+        const employeeDetails = await Employee.findOne({ employeeId: member.value });
+        if (employeeDetails) {
+          return {
+            name: employeeDetails.name,
+            employeeId: employeeDetails.employeeId,
+            profileImageUrl: employeeDetails.profileImageUrl,
+            position: employeeDetails.position,
+            _id: employeeDetails._id
+          };
+        }
+        return null;
+      }));
+
+      const projectObject = project.toObject();
+      return {
+        ...projectObject,
+        teamDetails: teamDetails.filter(member => member !== null)
+      };
+    }));
+
     return res.status(200).json({
-      data: projects,
-      messaage: "Projects Fetched !!",
+      data: projectsWithTeamDetails,
+      message: "Projects fetched with team details!",
       success: true,
     });
   } catch (error) {
+    console.error("Error in getAllProjects:", error);
     return res.status(500).json({
-      messaage: "Error while fetching projects !!",
+      message: "Error while fetching projects!",
       success: false,
     });
   }
@@ -204,6 +228,99 @@ const statusHandler = async(req, res) => {
   }
 }
 
+const getSpecificProject = async (req, res) => {
+  const { _id } = req.body;
+  try {
+    const project = await Project.findOne({ _id });
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found!",
+        success: false,
+      });
+    }
+
+    const teamDetails = await Promise.all(project.team.map(async (member) => {
+      const employeeDetails = await Employee.findOne({ employeeId: member.value });
+      if (employeeDetails) {
+        return {
+          name: employeeDetails.name,
+          employeeId: employeeDetails.employeeId,
+          profileImageUrl: employeeDetails.profileImageUrl,
+          position: employeeDetails.position,
+          _id: employeeDetails._id
+        };
+      }
+      return null;
+    }));
+
+    const projectObject = project.toObject();
+    const projectWithTeamDetails = {
+      ...projectObject,
+      teamDetails: teamDetails.filter(member => member !== null)
+    };
+
+    return res.status(200).json({
+      data: projectWithTeamDetails,
+      message: "Project fetched with team details!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while fetching project!",
+      success: false,
+    });
+  }
+};
+
+const getSpecificEmployeeProject = async(req, res) => {
+  try { 
+    const employee = await Employee.findById(req.user?._id)
+    const employeeId = employee.employeeId
+
+    if (!employee) {
+      return res.status(500).json({
+        message: "Employee Not found !!",
+        success: false,
+      });
+    }
+
+    const projects = await Project.find({})
+
+    if (!projects) {
+      return res.status(500).json({
+        message: "Projects Not found !!",
+        success: false,
+      });
+    }
+
+    const employeeProjects = projects.filter((project) => (
+      project.team.find((member) => (
+        employeeId === member.value
+      ))
+    ))
+
+    if (!employeeProjects) {
+      return res.status(500).json({
+        message: "Employee Projects Not found !!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      data: employeeProjects,
+      message: "Projects found !!",
+      success: true,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while fetching employee project!",
+      success: false,
+    });
+  }
+}
+
 export {
   createProject,
   getAllProjects,
@@ -211,4 +328,6 @@ export {
   addTeamMembers,
   editProject,
   statusHandler,
+  getSpecificProject,
+  getSpecificEmployeeProject
 };

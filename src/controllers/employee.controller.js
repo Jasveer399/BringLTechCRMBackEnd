@@ -1260,7 +1260,11 @@ const getEmployeeSalary = async (req, res) => {
       console.log("deductions: ", deductions);
       if (leave.leaveType === "Half-Day") {
         deductions += perDaySalary / 2;
-      } else {
+      } 
+      else if (leave.leaveType === "Medical Leave"){
+        deductions += 0
+      }
+      else {
         deductions += perDaySalary;
       }
     });

@@ -657,6 +657,31 @@ const toggleDailyTask = async (req, res) => {
     });
   }
 };
+
+const getSpecificTask = async(req, res) => {
+  const { _id } = req.body 
+  try {
+    const task = await Task.findOne({ _id })
+
+    if (!task) {
+      return res.status(500).json({
+        message: "Task Not found !!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      data: task,
+      message: "Task Fetched !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while getting task !!",
+      success: false,
+    });
+  }
+}
 export {
   createTask,
   getAllTasks,
@@ -671,5 +696,6 @@ export {
   setPriorityTask,
   createAndAssignDailyTasks,
   toggleDailyTask,
+  getSpecificTask,
   calculateRating,
 };

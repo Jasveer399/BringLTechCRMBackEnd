@@ -139,6 +139,7 @@ const deleteRole = async (req, res) => {
 
 const editRole = async (req, res) => {
   const { role, editRole } = req.body;
+  console.log(req.body)
 
   try {
     const config = await Config.findOne();

@@ -74,6 +74,9 @@ const taskSchema = new Schema(
     modifytasklink: {
       type: String,
     },
+    newModifyDate: {
+      type: String,
+    },
     ///////////////////////////////////////////////////////////////
     isUpdated: {
       type: Boolean,
@@ -94,9 +97,7 @@ const taskSchema = new Schema(
     date: {
       type: String,
     },
-    newModifyDate: {
-      type: String,
-    },
+    
     newUpdateDate: {
       type: String,
     },
