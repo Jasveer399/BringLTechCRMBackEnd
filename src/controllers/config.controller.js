@@ -1,3 +1,4 @@
+import { Employee } from "../model/employee.model.js";
 import { Config } from "./../model/config.model.js";
 
 const employeeRole = async (req, res) => {
@@ -149,11 +150,28 @@ const editRole = async (req, res) => {
         .json({ message: "No roles found", success: false });
     }
     const filteredRoles = config.options.filter((option) =>
-      option._id == role._id ? (option.value = editRole) : option
+      option._id == role._id ? { ...option, value: editRole } : option
     );
 
     config.options = filteredRoles;
     await config.save();
+
+    const employees = await Employee.find({ position: role.value });
+
+    if (employees.length === 0) {
+      return res.status(200).json({
+        data: filteredRoles,
+        message: "Role Edited Successfully, but no employees found with this role",
+        success: true,
+      });
+    }
+
+    const updatePromises = employees.map(employee => {
+      employee.position = editRole;
+      return employee.save();
+    });
+
+    await Promise.all(updatePromises);
 
     return res.status(200).json({
       data: filteredRoles,
@@ -162,6 +180,7 @@ const editRole = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({
+      error: error.message,
       message: "Error while editing role",
       success: false,
     });

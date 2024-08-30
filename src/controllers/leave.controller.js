@@ -99,8 +99,6 @@ const fetchLeaveOfSpecificemployee = async (req, res) => {
   } else {
     id = req.user?._id
   }
-  console.log("ID", id)
-  console.log("req.body>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>.", req.body)
   try {
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1; // JavaScript months are 0-indexed
