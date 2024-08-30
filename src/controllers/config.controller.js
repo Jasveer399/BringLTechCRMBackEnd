@@ -150,7 +150,7 @@ const editRole = async (req, res) => {
         .json({ message: "No roles found", success: false });
     }
     const filteredRoles = config.options.filter((option) =>
-      option._id == role._id ? { ...option, value: editRole } : option
+      option._id == role._id ? (option.value = editRole) : option
     );
 
     config.options = filteredRoles;
