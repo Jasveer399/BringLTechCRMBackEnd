@@ -26,10 +26,10 @@ const generateAccessAndRefreshToken = async (userid) => {
   }
 };
 const createEmployee = async (req, res) => {
-  const { name, position, email, employeeId } = req.body;
+  const { name, position, email, employeeId, password, joiningDate } = req.body;
   const adminEmail = "jassijas182002@gmail.com"; // Admin's email address
 
-  if (!name || !position || !employeeId || !email) {
+  if (!name && !position && !employeeId && !email && password && !joiningDate) {
     return res.status(400).json({
       message: "All fields are required",
       success: false,
@@ -45,7 +45,7 @@ const createEmployee = async (req, res) => {
   }
 
   try {
-    const password = nanoid(10);
+    // const password = nanoid(10);
     if (!password) {
       return res.status(500).json({
         message: "Password is not created during employee registration",
@@ -58,6 +58,7 @@ const createEmployee = async (req, res) => {
       email,
       employeeId,
       password,
+      joiningDate
     });
     if (!createdUser) {
       return res.status(500).json({
@@ -87,6 +88,58 @@ const createEmployee = async (req, res) => {
     });
   }
 };
+
+const editEmployee = async(req, res) => {
+  const { name, position, email, employeeId, password, joiningDate, _id } = req.body
+  try {
+    if (!name && !position && !email && !employeeId && !joiningDate) {
+      return res.status(404).json({
+        messaage: "All fields are required",
+        success: false,
+      });
+    }
+
+    const employee = await Employee.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          name,
+          position,
+          email,
+          employeeId,
+          joiningDate
+        }
+      },
+      { new: true }
+    )
+
+    if (!employee) {
+      return res.status(500).json({
+        messaage: "Employee Not Found !!",
+        success: false,
+      });
+    }
+
+    let passwordUpdate = false
+    if (password && password.length > 7) {
+      employee.password = password
+      employee.save()
+      passwordUpdate = true
+    }
+
+    return res.status(200).json({
+      data: employee,
+      passwordUpdated: passwordUpdate,
+      messaage: "Employee Updated Successfully !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      messaage: "Error while editing employee. Try Later !!",
+      success: false,
+    });
+  }
+}
 const updatePassword = async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   const id = req.user?._id;
@@ -246,6 +299,7 @@ function parseCustomDate(dateString) {
 }
 const logoutEmployee = async (req, res) => {
   const { id } = req.body;
+  console.log(req.body)
   if (!id) {
     return res.status(400).json({
       message: "All fields are required",
@@ -1296,6 +1350,7 @@ const getEmployeeSalary = async (req, res) => {
 
 export {
   createEmployee,
+  editEmployee,
   loginEmployee,
   logoutEmployee,
   getAllEmployee,

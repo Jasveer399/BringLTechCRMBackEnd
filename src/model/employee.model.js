@@ -121,6 +121,10 @@ const employeeSchema = new Schema(
     salary: {
       type: String,
     },
+    joiningDate: {
+      type: String,
+      // required: true
+    }
   },
   {
     timestamps: true,

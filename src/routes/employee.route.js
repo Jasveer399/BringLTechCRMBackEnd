@@ -4,6 +4,7 @@ import {
   checkSalary,
   createEmployee,
   deleteEmployee,
+  editEmployee,
   editSalary,
   getAllEmployee,
   getAllMessages,
@@ -28,6 +29,7 @@ const router = Router();
 const upload = multer({ dest: "uploads/" });
 
 router.post("/", createEmployee);
+router.post("/editEmployee", editEmployee);
 router.post("/login", loginEmployee);
 router.post("/updatepassword", verifyJWT(["employee"]), updatePassword),
   router.post("/getAllEmployee", getAllEmployee);
