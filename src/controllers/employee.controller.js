@@ -896,7 +896,7 @@ const getEmployeeRatings = async (req, res) => {
       const averageScore =
         employee.maxMonthlyRating > 0
           ? (employee.monthlyRating / employee.maxMonthlyRating) * 100
-          : 0;
+          : 0
 
       const roundedScore = Math.round(averageScore);
       const status = getStatus(roundedScore);
@@ -919,7 +919,7 @@ const getEmployeeRatings = async (req, res) => {
     const rankedEmployeeRatings = employeeRatings.map((employee, index) => ({
       rank: index + 1,
       ...employee,
-    }));
+    }))
 
     // Convert statusCounts to the format needed for the pie chart
     const statusData = Object.entries(statusCounts).map(([name, value]) => ({

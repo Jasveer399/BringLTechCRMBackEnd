@@ -1,4 +1,5 @@
 import { Admin } from "../model/admin.model.js";
+import sendPasswordResetEmail from "../utils/changepassword.js";
 
 const generateAccessAndRefreshToken = async (userid) => {
   try {
@@ -152,4 +153,129 @@ const getallAdmin = async (req, res) => {
     });
   }
 };
-export { createAdmin, adminlogin, logoutAdmin, getallAdmin };
+
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+const sendMailTochangePassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    return res
+      .status(400)
+      .json({ message: "Email is required", success: false });
+  }
+  try {
+    const admin = await Admin.findOne({ email });
+  if (!admin) {
+    return res
+      .status(404)
+      .json({ message: "Admin not found", success: false });
+  }
+  const generatedOTP = generateOTP();
+  admin.changepasswordcode = generatedOTP;
+  await admin.save();
+  const emailSent = await sendPasswordResetEmail(email, generatedOTP);
+  if (emailSent) {
+    return res
+      .status(200)
+      .json({ message: "Password reset email sent", success: true });
+  } else {
+    return res
+      .status(500)
+      .json({ message: "Failed to send password reset email", success: false });
+  }
+  } catch (error) {
+    return res.status(500).json({
+      messaage: "Error while changing password",
+      success: false,
+    });
+  }
+};
+
+const changePassword = async (req, res) => {
+  const { newPassword, otp, email } = req.body;
+  if (!newPassword && !otp && !id) {
+    return res.status(400).json({
+      message: "New password, OTP, and Email is required !!",
+      success: false,
+    });
+  }
+
+  try {
+    const admin = await Admin.findOne({
+      email: email,
+      changepasswordcode: otp,
+    });
+    if (!admin) {
+      return res.status(404).json({
+        message: "Admin not found or OTP is expired",
+        success: false,
+      });
+    }
+    admin.password = newPassword;
+    admin.changepasswordcode = null;
+    await admin.save();
+
+    return res.status(200).json({
+      message: "Password updated successfully",
+      data: admin,
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error while updating password",
+      success: false,
+    });
+  }
+};
+
+const deleteAdmin = async(req, res) => {
+  const { email } = req.body
+  try {
+    const deletedAdmin = await Admin.findOneAndDelete({ email })
+
+    if (!deletedAdmin) {
+      return res.status(404).json({
+        message: "Admin Not Found !!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      data: deletedAdmin,
+      message: "Admin Deleted Successfully !!",
+      success: false,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error While Deleting Admin !!",
+      success: false,
+    });
+  }
+}
+
+const getCurrentAdmin = async (req, res) => {
+  try {
+    const _id = req.user?._id
+    const admin = await Admin.findById({ _id })
+    if (!admin) {
+      return res.status(404).json({
+        message: "Admin Not Found !!",
+        success: false,
+      });
+    }
+    return res.status(200).json({
+      data: admin,
+      message: "Admin Found !!",
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Error While Getting Current Admin !!",
+      success: false,
+    });
+  }
+}
+
+export { createAdmin, adminlogin, logoutAdmin, getallAdmin, sendMailTochangePassword, changePassword, deleteAdmin, getCurrentAdmin };

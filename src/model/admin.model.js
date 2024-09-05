@@ -7,7 +7,6 @@ const adminSchema = new Schema(
     username: {
       type: String,
       required: true,
-      unique: true,
     },
     email: {
       type: String,
@@ -17,6 +16,9 @@ const adminSchema = new Schema(
     password: {
       type: String,
       required: true,
+    },
+    changepasswordcode: {
+      type: String
     },
     adminType: {
       type: String,
