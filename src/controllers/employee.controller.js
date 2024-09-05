@@ -209,7 +209,7 @@ const loginEmployee = async (req, res) => {
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       user._id
     );
-    // const now = new Date();
+    const now = new Date();
     const formattedLoginTimestamp = date;
     const today = now;
 
