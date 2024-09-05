@@ -184,7 +184,7 @@ const updatePassword = async (req, res) => {
   }
 };
 const loginEmployee = async (req, res) => {
-  const { employeeId, password } = req.body;
+  const { employeeId, password, date } = req.body;
   if (!employeeId || !password) {
     return res.status(400).json({
       message: "All fields are required",
@@ -209,8 +209,8 @@ const loginEmployee = async (req, res) => {
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       user._id
     );
-    const now = new Date();
-    const formattedLoginTimestamp = formatDate(now);
+    // const now = new Date();
+    const formattedLoginTimestamp = date;
     const today = now;
 
     if (user.availability && Array.isArray(user.availability)) {
@@ -298,7 +298,7 @@ function parseCustomDate(dateString) {
   return new Date(year, month - 1, day, parsedHours, parseInt(minutes));
 }
 const logoutEmployee = async (req, res) => {
-  const { id } = req.body;
+  const { id, date } = req.body;
   console.log(req.body)
   if (!id) {
     return res.status(400).json({
@@ -310,8 +310,8 @@ const logoutEmployee = async (req, res) => {
 
   try {
     const user = await Employee.findById(req.user?._id);
-    const now = new Date();
-    const formattedLoginTimestamp = formatDate(now);
+    // const now = new Date();
+    const formattedLoginTimestamp = date;
 
     // Update the specific availability entry
     const updatedUser = await Employee.findOneAndUpdate(
@@ -899,7 +899,7 @@ const getEmployeeRatings = async (req, res) => {
           : 0
 
       const roundedScore = Math.round(averageScore);
-      const status = getStatus(roundedScore);
+      const status = getStatus(roundedScore); 
 
       // Increment the count for this status
       statusCounts[status]++;

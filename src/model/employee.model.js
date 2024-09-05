@@ -124,7 +124,8 @@ const employeeSchema = new Schema(
     joiningDate: {
       type: String,
       // required: true
-    }
+    },
+    
   },
   {
     timestamps: true,
