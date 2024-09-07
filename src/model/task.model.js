@@ -47,6 +47,10 @@ const taskSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    isDueTask: {
+      type: Boolean,
+      default: false
+    },
     ///////////////////////////////////////////////////////////////////////////
     isModify: {
       type: Boolean,

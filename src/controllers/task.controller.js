@@ -12,6 +12,7 @@ const createTask = async (req, res) => {
     employeeId,
     date,
     isDailyTask,
+    isDueTask
   } = req.body;
   if (!title && !description && !timeFrom && !timeTo && !date) {
     return res.status(400).json({
@@ -32,6 +33,7 @@ const createTask = async (req, res) => {
       assignedTo: employeeId,
       tasktype: "new",
       isDailyTask,
+      isDueTask
     });
 
     if (!createdTask) {
@@ -177,9 +179,9 @@ const getSpecificEmployeeTask = async (req, res) => {
   });
 };
 const taskVerifyHandler = async (req, res) => {
-  const { _id, link, timeExceedChecker, taskType } = req.body;
+  const { _id, link, timeExceedChecker, taskType, date } = req.body;
   const now = new Date();
-  const completiontime = formatDate(now);
+  const completiontime = date;
   let verifiedTask;
   if (taskType && taskType === "Modified Task") {
     verifiedTask = await Task.findByIdAndUpdate(
