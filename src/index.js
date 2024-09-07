@@ -16,7 +16,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://bringletech-crm-frontend.vercel.app",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -62,6 +62,7 @@ import breakRouter from "./routes/break.route.js";
 import AnnouncementRouter from "./routes/announcement.routes.js";
 import leaveRouter from "./routes/leave.routes.js";
 import employeeRatingRouter from "./routes/employeeRatings.routes.js"
+import dailyTasksRouter from "./routes/dailyTasks.routes.js"
 
 app.use("/admin", adminrouter);
 app.use("/employee", employeeRouter);
@@ -73,6 +74,7 @@ app.use("/break", breakRouter);
 app.use("/announcement", AnnouncementRouter);
 app.use("/leave", leaveRouter);
 app.use("/ratings", employeeRatingRouter)
+app.use("/dailyTasks", dailyTasksRouter)
 
 // Socket.IO connection handling
 io.on("connection", (socket) => {
