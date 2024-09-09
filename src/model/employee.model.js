@@ -8,7 +8,7 @@ const employeeSchema = new Schema(
       type: String,
       required: true,
     },
-    
+
     position: {
       type: String,
       required: true,
@@ -71,6 +71,7 @@ const employeeSchema = new Schema(
           type: Date,
           default: Date.now,
         },
+        read: { type: Boolean, default: false },
       },
     ],
     availability: [
@@ -125,7 +126,6 @@ const employeeSchema = new Schema(
       type: String,
       // required: true
     },
-    
   },
   {
     timestamps: true,

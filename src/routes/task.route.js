@@ -1,5 +1,6 @@
 import {
   calculateRating,
+  createMultipleTasks,
   createTask,
   editTaskHandler,
   getAllTasks,
@@ -20,6 +21,7 @@ import { verifyJWT } from "../middleware/auth.middleware.js";
 const router = Router();
 
 router.post("/", verifyJWT(["admin", "employee"]), createTask);
+router.post("/createMultipleTasks", verifyJWT(["admin", "employee"]), createMultipleTasks);
 router.get("/getAllTasks", verifyJWT(["admin"]), getAllTasks);
 router.post(
   "/getemployeetasks",

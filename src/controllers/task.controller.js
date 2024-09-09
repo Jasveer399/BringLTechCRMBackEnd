@@ -55,6 +55,84 @@ const createTask = async (req, res) => {
     });
   }
 };
+const createMultipleTasks = async (req, res) => {
+  const {
+    title,
+    description,
+    link,
+    timeFrom,
+    timeTo,
+    employeeId,
+    date,
+    isDailyTask,
+    isDueTask,
+    selected
+  } = req.body;
+
+  if (!title || !description || !timeFrom || !timeTo || !date) {
+    return res.status(400).json({
+      message: "Title, description, timeFrom, timeTo, and date are required!",
+      success: false,
+    });
+  }
+
+  if ((!selected || !Array.isArray(selected) || selected.length === 0) && !employeeId) {
+    return res.status(400).json({
+      message: "Either selected array or employeeId must be provided!",
+      success: false,
+    });
+  }
+
+  try {
+    let employeesToAssign = [];
+
+    // Add employeeId to the list if it exists
+    if (employeeId) {
+      employeesToAssign.push({ value: employeeId });
+    }
+
+    // Add selected employees to the list
+    if (selected && Array.isArray(selected)) {
+      employeesToAssign = [...employeesToAssign, ...selected];
+    }
+
+    const tasks = employeesToAssign.map(employee => ({
+      title,
+      description,
+      link,
+      timeFrom,
+      timeTo,
+      date,
+      createdBy: req.role,
+      assignedTo: employee.value,
+      tasktype: "new",
+      isDailyTask,
+      isDueTask
+    }));
+
+    const createdTasks = await Task.insertMany(tasks);
+
+    if (!createdTasks || createdTasks.length === 0) {
+      return res.status(500).json({
+        message: "Something went wrong while creating tasks!",
+        success: false,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Tasks created successfully",
+      data: createdTasks,
+      success: true,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+      message: "Error while creating tasks",
+      success: false,
+    });
+  }
+};
+
 const getAllTasks = async (req, res) => {
   try {
     const allTasks = await Task.aggregate([
@@ -700,4 +778,5 @@ export {
   toggleDailyTask,
   getSpecificTask,
   calculateRating,
+  createMultipleTasks
 };

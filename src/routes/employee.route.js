@@ -16,6 +16,7 @@ import {
   getSpecificEmployeeTasks,
   loginEmployee,
   logoutEmployee,
+  markMessagesAsRead,
   sendMailTochangePassword,
   sendMessage,
   updateEmployee,
@@ -73,6 +74,7 @@ router.post(
 router.post("/addSalary", verifyJWT(["employee", "admin"]),addSalary)
 router.post("/editSalary", verifyJWT(["employee", "admin"]),editSalary)
 router.post("/getEmployeeSalary", verifyJWT(["employee", "admin"]),getEmployeeSalary)
+router.post("/markAsRead", verifyJWT(["employee", "admin"]),markMessagesAsRead)
 
 
 export default router;

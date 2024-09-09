@@ -40,6 +40,7 @@ const adminSchema = new Schema(
           type: Date,
           default: Date.now,
         },
+        read: { type: Boolean, default: false },
       },
     ],
   },

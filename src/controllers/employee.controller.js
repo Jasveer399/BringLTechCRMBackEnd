@@ -1068,6 +1068,7 @@ const sendMessage = async (req, res) => {
       sender: senderId,
       receiver: receiverId,
       timestamp: new Date(),
+      read: false
     };
 
     const senderModel = senderType === "employee" ? Employee : Admin;
@@ -1094,6 +1095,31 @@ const sendMessage = async (req, res) => {
   } catch (error) {
     console.error("Error sending message:", error);
     res.status(500).json({ success: false, message: "Error sending message" });
+  }
+};
+
+const markMessagesAsRead = async (req, res) => {
+  const { otherUserId, userType } = req.body;
+  const userId = req.user._id;
+
+  try {
+
+    const Model = userType === "admin" ? Admin : Employee
+    const user = await Model.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    user.massage = user.massage.map(msg => 
+      msg.sender.toString() === otherUserId ? { ...msg, read: true } : msg
+    );
+
+    await user.save();
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    console.error("Error marking messages as read:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -1367,6 +1393,7 @@ export {
   checkSalary,
   sendMailTochangePassword,
   sendMessage,
+  markMessagesAsRead,
   getAllMessages,
   addSalary,
   editSalary,
