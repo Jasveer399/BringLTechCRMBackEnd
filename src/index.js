@@ -89,6 +89,10 @@ io.on("connection", (socket) => {
     console.log(`Employee ${employeeId} joined their room`);
   });
 
+  socket.on("message_delivered", ({ messageId, deliveredTo }) => {
+    io.to(deliveredTo.toString()).emit("message_status", { messageId, status: 'delivered' });
+  });
+
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });});

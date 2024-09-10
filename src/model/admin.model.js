@@ -40,6 +40,11 @@ const adminSchema = new Schema(
           type: Date,
           default: Date.now,
         },
+        status: {
+          type: String,
+          enum: ['sent', 'delivered', 'read'],
+          default: 'sent'
+        },
         read: { type: Boolean, default: false },
       },
     ],

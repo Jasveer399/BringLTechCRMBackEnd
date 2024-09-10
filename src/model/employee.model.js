@@ -71,10 +71,15 @@ const employeeSchema = new Schema(
           type: Date,
           default: Date.now,
         },
+        status: {
+          type: String,
+          enum: ['sent', 'delivered', 'read'],
+          default: 'sent'
+        },
         read: { type: Boolean, default: false },
       },
     ],
-    availability: [
+    availability: [ 
       {
         availableTo: String,
         availableFrom: String,
@@ -92,6 +97,10 @@ const employeeSchema = new Schema(
         type: {
           type: String,
         },
+        leaveId: {
+          type: Schema.Types.ObjectId,
+          ref: "Leave"
+        }
       },
     ],
     ispasswordupdated: {

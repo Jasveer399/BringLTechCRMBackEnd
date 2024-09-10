@@ -1068,6 +1068,7 @@ const sendMessage = async (req, res) => {
       sender: senderId,
       receiver: receiverId,
       timestamp: new Date(),
+      status: 'sent',
       read: false
     };
 
@@ -1080,18 +1081,17 @@ const sendMessage = async (req, res) => {
     });
 
     await receiverModel.findByIdAndUpdate(receiverId, {
-      $push: { massage: newMessage },
+      $push: { massage: { ...newMessage, status: 'delivered' } },
     });
 
     // Emit to both sender and receiver rooms
     const io = req.app.get("io");
+    io.to(senderId.toString()).emit("message_status", { messageId: newMessage._id, status: 'sent' });
     io.to(senderId.toString())
       .to(receiverId.toString())
       .emit("new_message", newMessage);
 
-    res
-      .status(200)
-      .json({ success: true, message: "Message sent successfully" });
+      res.status(200).json({ success: true, message: "Message sent successfully", messageId: newMessage._id });
   } catch (error) {
     console.error("Error sending message:", error);
     res.status(500).json({ success: false, message: "Error sending message" });
@@ -1110,10 +1110,15 @@ const markMessagesAsRead = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    user.massage = user.massage.map(msg => 
-      msg.sender.toString() === otherUserId ? { ...msg, read: true } : msg
-    );
+    const updatedMessages = user.massage.map(msg => {
+      if (msg.sender.toString() === otherUserId && msg.status !== 'read') {
+        msg.status = 'read';
+        return msg;
+      }
+      return msg;
+    });
 
+    user.massage = updatedMessages;
     await user.save();
 
     res.status(200).json({ success: true });

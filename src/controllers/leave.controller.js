@@ -24,7 +24,21 @@ const createLeave = async (req, res) => {
         success: false,
       });
     }
-    console.log(req.body)
+
+    const leave = await Leave.create({
+      employeeId,
+      leaveType,
+      reason,
+      date,
+    });
+
+    if (!leave) {
+      return res.status(500).json({
+        message: "Error while creating leave. Try Later !!",
+        success: false,
+      });
+    }
+
     if (leaveType === "Half-Day") {
       // Find the matching availability object
       const availabilityIndex = user.availability.findIndex(
@@ -38,6 +52,7 @@ const createLeave = async (req, res) => {
         user.availability[availabilityIndex].type = leaveType;
         user.availability[availabilityIndex].owner = "Employee";
         user.availability[availabilityIndex].date = date;
+        user.availability[availabilityIndex].leaveId = leave._id;
       } else {
         // If no matching availability found, create a new one
         const newAvailability = {
@@ -47,6 +62,7 @@ const createLeave = async (req, res) => {
           date: date,
           owner: "Employee",
           type: leaveType,
+          leaveId: leave._id,
         };
         user.availability.push(newAvailability);
       }
@@ -57,24 +73,11 @@ const createLeave = async (req, res) => {
         owner: "Employee",
         isAvailable: false,
         type: leaveType,
+        leaveId: leave._id,
       };
       user.availability.push(newAvailability);
     }
 
-    const leave = await Leave.create({
-      employeeId,
-      leaveType,
-      reason,
-      date,
-    });
-
-    if (!leave) {
-      return res.status(500).json({
-        error: error.message,
-        message: "Error while creating leave !!",
-        success: false,
-      });
-    }
     await user.save();
 
     return res.status(200).json({
@@ -86,6 +89,128 @@ const createLeave = async (req, res) => {
     return res.status(500).json({
       error: error.message,
       message: "Error while creating leave !!",
+      success: false,
+    });
+  }
+};
+
+const updateLeave = async (req, res) => {
+  const { _id, reason, leaveType, empId } = req.body;
+
+  try {
+    if (!reason || !leaveType) {
+      return res.status(400).json({
+        message: "Reason & Leave Type is required!",
+        success: false,
+      });
+    }
+
+    const user = await Employee.findById(empId);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found!",
+        success: false,
+      });
+    }
+
+    const leave = await Leave.findByIdAndUpdate(
+      _id,
+      { 
+        $set: {
+          reason,
+          leaveType,
+        }
+      },
+      { new: true }
+    );
+
+    if (!leave) {
+      return res.status(404).json({
+        message: "Leave Not Found!",
+        success: false,
+      });
+    }
+
+    // Update the availability in the Employee model
+    const availabilityIndex = user.availability.findIndex(
+      (avail) => avail.leaveId && avail.leaveId.toString() === _id
+    );
+
+    if (availabilityIndex !== -1) {
+      // Update existing availability
+      user.availability[availabilityIndex].type = leaveType;
+
+      if (leaveType === "Half-Day") {
+        user.availability[availabilityIndex].isAvailable = false;
+      } else {
+        user.availability[availabilityIndex].isAvailable = false;
+      }
+    } else {
+      return res.status(404).json({
+        message: "User Availability Not Found !!",
+        success: false,
+      });
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      data: leave,
+      message: "Leave Updated Successfully!!",
+      success: true,
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+      message: "Error while updating leave!!",
+      success: false,
+    });
+  }
+};
+
+const deleteLeave = async (req, res) => {
+  const { leaveId, empId } = req.body;
+
+  try {
+    // Find and delete the leave
+    const deletedLeave = await Leave.findByIdAndDelete(leaveId);
+
+    if (!deletedLeave) {
+      return res.status(404).json({
+        message: "Leave not found!",
+        success: false,
+      });
+    }
+
+    // Find the employee
+    const employee = await Employee.findById(empId);
+
+    if (!employee) {
+      return res.status(404).json({
+        message: "Employee not found!",
+        success: false,
+      });
+    }
+
+    // Remove the corresponding availability entry
+    employee.availability = employee.availability.filter(
+      (avail) => !avail.leaveId || avail.leaveId.toString() !== leaveId
+    );
+
+    // Save the updated employee document
+    await employee.save();
+
+    return res.status(200).json({
+      message: "Leave deleted successfully!",
+      success: true,
+    })
+
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message,
+      message: "Error while deleting leave!",
       success: false,
     });
   }
@@ -244,4 +369,4 @@ const fetchAllEmployeesLeaves = async (req, res) => {
 };
 
 
-export { createLeave, fetchLeaveOfSpecificemployee, getEmployeesOnLeaveToday, fetchAllEmployeesLeaves };
+export { createLeave, fetchLeaveOfSpecificemployee, getEmployeesOnLeaveToday, fetchAllEmployeesLeaves, updateLeave, deleteLeave };
