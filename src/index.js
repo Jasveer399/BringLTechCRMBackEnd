@@ -28,6 +28,7 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://bringletech-crm-frontend.vercel.app",
+      "http://192.168.18.100:5173"
     ], // Your React app's URL
     credentials: true,
   })

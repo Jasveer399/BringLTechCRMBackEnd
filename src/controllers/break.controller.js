@@ -175,7 +175,7 @@ const getEmployeesTodayBreaks = async (req, res) => {
 
 const getEmployeeMonthlyBreaks = async (req, res) => {
   try {
-    const { employeeId, monthYear } = req.body; // Now expecting monthYear parameter
+    const { employeeId, month, year } = req.body; // Now expecting monthYear parameter
     console.log("req.body: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>",req.body)
 
     // Validate if the employeeId is a valid ObjectId
@@ -187,24 +187,30 @@ const getEmployeeMonthlyBreaks = async (req, res) => {
     }
 
     // Validate monthYear format
-    const monthYearRegex = /^\d{4}-\d{2}$/;
-    if (!monthYearRegex.test(monthYear)) {
-      return res.status(400).json({
-        message: "Invalid month-year format. Expected format: YYYY-MM",
-        success: false
-      });
-    }
+    // const monthYearRegex = /^\d{4}-\d{2}$/;
+    // if (!monthYearRegex.test(monthYear)) {
+    //   return res.status(400).json({
+    //     message: "Invalid month-year format. Expected format: YYYY-MM",
+    //     success: false
+    //   });
+    // }
 
     // Parse the month and year
-    const [year, month] = monthYear.split('-').map(Number);
+    // const [year, month] = monthYear.split('-').map(Number);
 
     // Get the first and last day of the specified month
     const firstDayOfMonth = new Date(year, month - 1, 1);
     const lastDayOfMonth = new Date(year, month, 0);
 
+    console.log("firstDayOfMonth: ", firstDayOfMonth)
+    console.log("lastDayOfMonth: ", lastDayOfMonth)
+
     // Format dates as strings to match your schema
-    const startDate = firstDayOfMonth.toISOString().split('T')[0];
-    const endDate = lastDayOfMonth.toISOString().split('T')[0];
+    const startDate = `${year}-${month}-${String(firstDayOfMonth.getDate()).padStart(2, '0')}`
+    const endDate = `${year}-${month}-${String(lastDayOfMonth.getDate()).padStart(2, '0')}`
+
+    console.log("startDate: ", startDate)
+    console.log("endDate: ", endDate)
 
     // Query for the employee's breaks in the specified month
     const breaks = await Break.find({
@@ -244,12 +250,13 @@ const getEmployeeMonthlyBreaks = async (req, res) => {
     const breakSummary = Object.values(processedBreaks);
 
     return res.status(200).json({
-      message: `Successfully retrieved employee's breaks for ${monthYear}`,
+      message: `Successfully retrieved employee's breaks`,
       success: true,
       data: breakSummary
     });
 
   } catch (error) {
+    console.log(error)
     return res.status(500).json({
       error: error.message,
       message: "Error while getting employee's monthly breaks!",
