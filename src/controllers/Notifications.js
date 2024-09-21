@@ -30,13 +30,14 @@ const makeNotificationsRead = async (req, res) => {
 };
 
 const addNotification = async (req, res) => {
-  const { message, type, recipientId, recipientModel } = req.body;
+  const { message, type, recipientId, recipientModel,  } = req.body;
 
   const notification = new Notification({
     message,
     type,
     recipient: recipientId,
     recipientModel,
+    
   });
   
   try {
@@ -70,9 +71,34 @@ const getAllNotifications = async (req, res) => {
   }
 };
 
+const getSpecificEmployeeNotification = async(req, res) => {
+  try {
+    const notifications = await Notification.find({ recipient: req.user._id })
+
+    if (!notifications) {
+      return res.status(500).json({
+        message: "Notifications Not Found !!",
+        success: false
+      })
+    }
+
+    return res.status(200).json({
+      data: notifications,
+      message: "Notifications fetched !!",
+      success: true
+    })
+  } catch (error) {
+    return res.status(500).json({
+      message: "Server Error",
+      success: false
+    })
+  }
+}
+
 export {
   getNotificationofUser,
   makeNotificationsRead,
   addNotification,
   getAllNotifications,
+  getSpecificEmployeeNotification
 };

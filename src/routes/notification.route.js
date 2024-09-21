@@ -6,6 +6,7 @@ import {
   addNotification,
   getAllNotifications,
   getNotificationofUser,
+  getSpecificEmployeeNotification,
   makeNotificationsRead,
 } from "../controllers/Notifications.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -18,9 +19,11 @@ router.get("/user/:userId", getNotificationofUser);
 router.patch("/:id/read", makeNotificationsRead);
 
 // Create a new notification
-router.post("/", addNotification);
+router.post("/",verifyJWT(['admin', 'employee']), addNotification);
 
 // Get all notifications of a specific admin
 router.get("/allNotifications", verifyJWT(['admin']), getAllNotifications);
+
+router.get("/getSpecificEmployeeNotification", verifyJWT(['employee']), getSpecificEmployeeNotification);
 
 export default router;
